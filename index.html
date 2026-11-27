@@ -66,191 +66,256 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-100/70 text-slate-800 min-h-screen antialiased">
 
-    <!-- Thanh tiêu đề & công cụ chính -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-        <div class="max-w-[1600px] mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <!-- Thanh tiêu đề & điều khiển chính -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 shadow-2xs">
+        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Nhận diện ứng dụng & trạng thái đồng bộ -->
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
                     <i data-lucide="calendar-check-2" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-slate-900 leading-tight">Chấm Công Tự Động Theo Tháng</h1>
-                    <p class="text-xs text-slate-500">Tự động quy đổi &amp; phân bổ ca ngẫu nhiên không trùng quy luật</p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">Chấm Công Tự Động Theo Tháng</h1>
+                        <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-medium px-2.5 py-0.5 rounded-full">
+                            <i data-lucide="database" class="w-3 h-3 text-blue-600"></i>
+                            <span id="cloudSyncText">Đang kết nối lưu trữ...</span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 hidden sm:block">Phân bổ ca ngẫu nhiên tự động • Quản lý đa kỳ theo chi nhánh</p>
                 </div>
             </div>
 
-            <!-- Bộ điều khiển cấu hình -->
-            <div class="flex flex-wrap items-center gap-2.5">
-                <!-- Chọn Tháng & Năm -->
-                <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                    <select id="selectMonth" class="bg-white text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
-                        <option value="1">Tháng 01</option>
-                        <option value="2">Tháng 02</option>
-                        <option value="3">Tháng 03</option>
-                        <option value="4">Tháng 04</option>
-                        <option value="5">Tháng 05</option>
-                        <option value="6">Tháng 06</option>
-                        <option value="7">Tháng 07</option>
-                        <option value="8" selected>Tháng 08</option>
-                        <option value="9">Tháng 09</option>
-                        <option value="10">Tháng 10</option>
-                        <option value="11">Tháng 11</option>
-                        <option value="12">Tháng 12</option>
-                    </select>
-                    <select id="selectYear" class="bg-white text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026" selected>2026</option>
-                        <option value="2027">2027</option>
-                    </select>
+            <!-- Cụm cấu hình kỳ & hành động chính -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Nhóm tham số tính công: Tháng/Năm + Đơn giá -->
+                <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 divide-x divide-slate-200">
+                    <div class="flex items-center gap-1 pr-1.5">
+                        <select id="selectMonth" aria-label="Chọn tháng" class="bg-white text-xs sm:text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500 cursor-pointer">
+                            <option value="1">Tháng 01</option>
+                            <option value="2">Tháng 02</option>
+                            <option value="3">Tháng 03</option>
+                            <option value="4">Tháng 04</option>
+                            <option value="5">Tháng 05</option>
+                            <option value="6">Tháng 06</option>
+                            <option value="7">Tháng 07</option>
+                            <option value="8" selected>Tháng 08</option>
+                            <option value="9">Tháng 09</option>
+                            <option value="10">Tháng 10</option>
+                            <option value="11">Tháng 11</option>
+                            <option value="12">Tháng 12</option>
+                        </select>
+                        <select id="selectYear" aria-label="Chọn năm" class="bg-white text-xs sm:text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500 cursor-pointer">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-1.5 pl-2.5 pr-1.5">
+                        <span class="text-xs font-medium text-slate-500 hidden md:inline">Đơn giá/ca:</span>
+                        <input type="text" id="ratePerShift" value="250.000" aria-label="Đơn giá mỗi ca" class="w-24 text-right text-xs sm:text-sm font-bold text-blue-700 bg-white px-2 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500">
+                        <span class="text-xs font-semibold text-slate-500">đ</span>
+                    </div>
                 </div>
 
-                <!-- Đơn giá / 1 ca -->
-                <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                    <span class="text-xs font-medium text-slate-500">Đơn giá/ca:</span>
-                    <input type="text" id="ratePerShift" value="250.000" class="w-24 text-right text-sm font-bold text-blue-700 bg-white px-2 py-1 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500">
-                    <span class="text-xs font-medium text-slate-500">đ</span>
-                </div>
-
-                <!-- Nút hành động chính -->
-                <button onclick="randomizeAll()" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer">
+                <!-- Hành động chính -->
+                <button onclick="randomizeAll()" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
                     <i data-lucide="shuffle" class="w-4 h-4"></i>
-                    <span>Chấm Ngẫu Nhiên Tất Cả</span>
+                    <span>Chấm Ngẫu Nhiên</span>
                 </button>
 
-                <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer">
+                <button onclick="openReportModal()" title="Xem báo cáo tổng hợp theo kỳ thanh toán & chi nhánh" class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                    <span>Báo Cáo</span>
+                </button>
+
+                <button onclick="exportToExcel()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     <span>Xuất Excel</span>
                 </button>
+
+                <!-- Menu Tiện ích hệ thống gọn gàng -->
+                <div class="relative" id="systemMenuWrapper">
+                    <button type="button" onclick="toggleSystemMenu(event)" title="Tiện ích hệ thống & Sao lưu" class="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer">
+                        <i data-lucide="settings-2" class="w-4 h-4 text-slate-600"></i>
+                        <span class="hidden lg:inline">Hệ thống</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                    </button>
+                    <div id="systemMenuDropdown" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-40 text-xs">
+                        <button onclick="closeSystemMenu(); copyFromPreviousSheet();" class="w-full px-3.5 py-2.5 text-left hover:bg-amber-50/80 text-slate-700 flex items-center gap-2.5 cursor-pointer">
+                            <i data-lucide="copy-plus" class="w-4 h-4 text-amber-600"></i>
+                            <div>
+                                <p class="font-semibold text-slate-800">Lấy DS từ bảng khác</p>
+                                <p class="text-[11px] text-slate-400">Sao chép nhân sự từ tháng gần nhất</p>
+                            </div>
+                        </button>
+                        <button onclick="closeSystemMenu(); openBackupModal();" class="w-full px-3.5 py-2.5 text-left hover:bg-violet-50/80 text-slate-700 flex items-center gap-2.5 cursor-pointer">
+                            <i data-lucide="hard-drive-download" class="w-4 h-4 text-violet-600"></i>
+                            <div>
+                                <p class="font-semibold text-slate-800">Backup / Khôi phục DB</p>
+                                <p class="text-[11px] text-slate-400">Sao lưu hoặc nhập file dữ liệu .json</p>
+                            </div>
+                        </button>
+                        <div class="my-1 border-t border-slate-100"></div>
+                        <button onclick="closeSystemMenu(); resetDefaultColumns();" class="w-full px-3.5 py-2.5 text-left hover:bg-slate-50 text-slate-700 flex items-center gap-2.5 cursor-pointer">
+                            <i data-lucide="columns-3" class="w-4 h-4 text-slate-500"></i>
+                            <div>
+                                <p class="font-semibold text-slate-800">Khôi phục cột mặc định</p>
+                                <p class="text-[11px] text-slate-400">Đặt lại thứ tự sắp xếp các cột</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-[1600px] mx-auto px-4 py-5 space-y-4">
-        <!-- Thanh tùy chọn thuật toán & thống kê nhanh -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-4 text-sm">
-                <span class="font-semibold text-slate-700 flex items-center gap-1.5">
-                    <i data-lucide="sliders-horizontal" class="w-4 h-4 text-blue-600"></i>
-                    Quy tắc ngẫu nhiên:
-                </span>
-                <label class="inline-flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900">
-                    <input type="checkbox" id="excludeSunday" checked onchange="randomizeAll()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                    <span>Trừ Chủ Nhật</span>
-                </label>
-                <label class="inline-flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900">
-                    <input type="checkbox" id="excludeSaturday" onchange="randomizeAll()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                    <span>Trừ Thứ 7</span>
-                </label>
-                <label class="inline-flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900" title="Tạo sự biến thiên tự nhiên giữa các tuần và tránh chấm dồn cục">
-                    <input type="checkbox" id="naturalSpread" checked onchange="randomizeAll()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                    <span>Rải đều ngẫu nhiên (tránh trùng quy luật)</span>
-                </label>
+    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 py-4 space-y-4">
+        <!-- Hàng 1: 4 Thẻ KPI Tổng Quan & Quy tắc chấm công -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-stretch">
+            <!-- 4 Thẻ KPI (chiếm 7 cột trên màn hình lớn) -->
+            <div class="xl:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-medium text-slate-500 truncate">Nhân sự hiển thị</p>
+                        <p id="statTotalEmployees" class="text-lg font-bold text-slate-900 leading-tight mt-0.5">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white px-4 py-3 rounded-2xl border border-blue-100 shadow-2xs flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-medium text-slate-500 truncate">Tổng số công</p>
+                        <p id="statTotalShifts" class="text-lg font-bold text-blue-700 leading-tight mt-0.5">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white px-4 py-3 rounded-2xl border border-emerald-100 shadow-2xs flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-medium text-slate-500 truncate">Tổng thành tiền</p>
+                        <div class="flex items-baseline gap-1.5 mt-0.5">
+                            <p id="statTotalMoney" class="text-base sm:text-lg font-bold text-emerald-700 leading-tight truncate">0 đ</p>
+                            <span id="statCompletionRate" class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md shrink-0">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white px-4 py-3 rounded-2xl border border-amber-100 shadow-2xs flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="coins" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-medium text-slate-500 truncate">Tổng tiền thừa</p>
+                        <p id="statTotalExcess" class="text-base sm:text-lg font-bold text-amber-600 leading-tight mt-0.5 truncate">0 đ</p>
+                    </div>
+                </div>
             </div>
 
-            <!-- Thống kê tổng hợp -->
-            <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm">
-                <div class="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                    <span class="text-slate-500">Nhân sự:</span>
-                    <strong id="statTotalEmployees" class="text-slate-900 ml-1">0</strong>
+            <!-- Thanh quy tắc thuật toán ngẫu nhiên (chiếm 5 cột trên màn hình lớn) -->
+            <div class="xl:col-span-5 bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col justify-center gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-indigo-600"></i>
+                        Quy tắc phân bổ ca tự động
+                    </span>
+                    <span class="text-[11px] text-slate-400 hidden sm:inline">Tự động cập nhật khi đổi</span>
                 </div>
-                <div class="bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
-                    <span class="text-blue-700">Tổng công:</span>
-                    <strong id="statTotalShifts" class="text-blue-900 ml-1">0</strong>
-                </div>
-                <div class="bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
-                    <span class="text-emerald-700">Tổng chi trả:</span>
-                    <strong id="statTotalMoney" class="text-emerald-900 ml-1">0 đ</strong>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-950 font-medium">
+                        <input type="checkbox" id="excludeSunday" checked onchange="randomizeAll()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span>Trừ Chủ Nhật</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-950 font-medium">
+                        <input type="checkbox" id="excludeSaturday" onchange="randomizeAll()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span>Trừ Thứ 7</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-950 font-medium" title="Tạo sự biến thiên tự nhiên giữa các tuần và tránh chấm dồn cục">
+                        <input type="checkbox" id="naturalSpread" checked onchange="randomizeAll()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span>Rải đều tự nhiên</span>
+                    </label>
                 </div>
             </div>
         </div>
 
-        <!-- Bảng chấm công chi tiết -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div class="p-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/60">
+        <!-- Hàng 2: Khu vực làm việc chính (Quản lý kỳ + Thao tác + Lọc + Bảng công) -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+            <!-- Dải 1: Thanh chuyển đổi nhanh các bảng kỳ đã lưu -->
+            <div id="savedSheetsBar" class="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="addNewRow()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span class="font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
+                        <i data-lucide="folder-kanban" class="w-3.5 h-3.5 text-indigo-600"></i>
+                        Bảng dữ liệu đã lưu (<span id="savedSheetsCount">0</span>):
+                    </span>
+                    <div id="savedSheetsList" class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-slate-400 italic">Đang tải danh sách bảng...</span>
+                    </div>
+                </div>
+                <span class="text-[11px] text-slate-400 hidden xl:inline-flex items-center gap-1">
+                    <i data-lucide="mouse-pointer-click" class="w-3 h-3"></i>
+                    Kéo tiêu đề cột để đổi vị trí • Kéo mép phải cột để chỉnh độ rộng
+                </span>
+            </div>
+
+            <!-- Dải 2: Thanh công cụ dữ liệu (Trái) & Bộ lọc phân cấp Mẹ -> Con (Phải) -->
+            <div class="px-4 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <!-- Nhóm nhập liệu -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="addNewRow()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer shadow-2xs">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
                         <span>Thêm Nhân Sự</span>
                     </button>
-                    <button onclick="openBulkModal('excel-file')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <button onclick="openBulkModal('excel-file')" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
                         <span>Import Excel / Google Sheet</span>
                     </button>
-                    <button onclick="resetDefaultColumns()" title="Đặt lại thứ tự cột mặc định" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer">
-                        <i data-lucide="columns-3" class="w-3.5 h-3.5 text-slate-600"></i>
-                        <span>Cột mặc định</span>
-                    </button>
-                    <button onclick="copyFromPreviousSheet()" title="Sao chép danh sách nhân sự từ bảng gần nhất sang tháng đang chọn" class="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer">
-                        <i data-lucide="copy-plus" class="w-3.5 h-3.5 text-amber-600"></i>
-                        <span>Lấy DS từ bảng khác</span>
-                    </button>
-                    <button onclick="openBackupModal()" title="Sao lưu toàn bộ Database ra file hoặc khôi phục từ máy khác" class="inline-flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">
-                        <i data-lucide="hard-drive-download" class="w-3.5 h-3.5"></i>
-                        <span>Backup / Khôi Phục DB</span>
-                    </button>
-                    <button onclick="openReportModal()" title="Xem và xuất báo cáo tổng hợp theo kỳ thanh toán, chi nhánh và nhân viên" class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">
-                        <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
-                        <span>Báo Cáo Tổng Hợp</span>
-                    </button>
-                    <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium px-3 py-2 rounded-xl">
-                        <i data-lucide="database" class="w-3.5 h-3.5 text-blue-600"></i>
-                        <span id="cloudSyncText">Đang kết nối lưu trữ...</span>
-                    </span>
                     <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleExcelFileImport(event)">
                     <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="handleBackupFileSelect(event)">
                 </div>
-                <p class="text-xs text-slate-500 italic">
-                    * Mẹo: Nhập <strong>Số tiền</strong> để tự động chấm công; kéo tiêu đề cột để <strong>đổi vị trí</strong> hoặc kéo mép phải để <strong>đổi độ rộng cột</strong>.
-                </p>
-            </div>
 
-            <!-- Thanh danh sách toàn bộ các bảng đã lưu trong Database -->
-            <div id="savedSheetsBar" class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-2 text-xs">
-                <span class="font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
-                    <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-600"></i>
-                    Các bảng đã lưu (<span id="savedSheetsCount">0</span>):
-                </span>
-                <div id="savedSheetsList" class="flex flex-wrap items-center gap-1.5">
-                    <span class="text-slate-400 italic">Đang tải danh sách bảng...</span>
-                </div>
-            </div>
-
-            <!-- Thanh bộ lọc theo Chi nhánh, Kỳ thanh toán & Tên nhân sự -->
-            <div class="px-3.5 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <span class="font-semibold text-slate-700 flex items-center gap-1.5">
-                        <i data-lucide="filter" class="w-3.5 h-3.5 text-blue-600"></i>
-                        Bộ lọc hiển thị:
-                    </span>
-                    <div class="flex items-center gap-1.5">
-                        <label for="filterPeriod" class="text-slate-500 font-medium">Kỳ thanh toán:</label>
-                        <select id="filterPeriod" onchange="onTableFilterChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
+                <!-- Nhóm bộ lọc theo cấu trúc Mẹ (Kỳ thanh toán) -> Con (Chi nhánh) -> Nhân viên -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center gap-1.5 bg-sky-50/70 px-2.5 py-1 rounded-xl border border-sky-200/80">
+                        <span class="text-[11px] font-semibold text-sky-700 hidden sm:inline">Kỳ:</span>
+                        <select id="filterPeriod" onchange="onTableFilterChange()" aria-label="Lọc kỳ thanh toán" class="bg-transparent font-semibold text-sky-950 py-0.5 focus:outline-none cursor-pointer">
                             <option value="ALL">Tất cả kỳ thanh toán</option>
                         </select>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <label for="filterBranch" class="text-slate-500 font-medium">Chi nhánh:</label>
-                        <select id="filterBranch" onchange="onTableFilterChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
+
+                    <div class="flex items-center gap-1.5 bg-indigo-50/70 px-2.5 py-1 rounded-xl border border-indigo-200/80">
+                        <span class="text-[11px] font-semibold text-indigo-700 hidden sm:inline">CN:</span>
+                        <select id="filterBranch" onchange="onTableFilterChange()" aria-label="Lọc chi nhánh" class="bg-transparent font-semibold text-indigo-950 py-0.5 focus:outline-none cursor-pointer">
                             <option value="ALL">Tất cả chi nhánh</option>
                         </select>
                     </div>
+
                     <div class="relative flex items-center">
                         <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none"></i>
-                        <input type="text" id="filterNameInput" oninput="onTableFilterChange()" placeholder="Tìm theo tên nhân sự..."
-                            class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 w-48 sm:w-56">
+                        <input type="text" id="filterNameInput" oninput="onTableFilterChange()" placeholder="Tìm tên nhân sự..."
+                            class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 w-40 sm:w-48">
                     </div>
-                    <button id="btnResetTableFilters" onclick="resetTableFilters()" class="hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold border border-rose-200 transition-colors cursor-pointer">
+
+                    <button id="btnResetTableFilters" onclick="resetTableFilters()" class="hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold border border-rose-200 transition-colors cursor-pointer">
                         <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
                         <span>Xóa lọc</span>
                     </button>
+
+                    <span id="filterResultSummary" class="text-slate-500 font-medium pl-1 hidden md:inline"></span>
                 </div>
-                <div id="filterResultSummary" class="text-slate-500 font-medium"></div>
             </div>
 
-            <div class="table-container overflow-x-auto max-h-[64vh]">
+            <!-- Vùng bảng chấm công chính -->
+            <div class="table-container overflow-x-auto max-h-[68vh]">
                 <table class="w-full border-collapse text-sm">
                     <thead id="tableHeader" class="sticky top-0 z-20 shadow-2xs"></thead>
                     <tbody id="tableBody" class="divide-y divide-slate-200 bg-white"></tbody>
@@ -1293,7 +1358,7 @@
                     state.employees.map(e => (e.paymentPeriod || '').trim() || defaultPeriod)
                 )).sort((a, b) => a.localeCompare(b, 'vi'));
 
-                periodSel.innerHTML = `<option value="ALL">Tất cả kỳ thanh toán (${periods.length})</option>` +
+                periodSel.innerHTML = `<option value="ALL">Tất cả kỳ (${periods.length})</option>` +
                     periods.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
 
                 if (state.filters.paymentPeriod !== 'ALL' && !periods.includes(state.filters.paymentPeriod)) {
@@ -1303,8 +1368,13 @@
             }
 
             if (branchSel) {
+                // Tự động lọc danh sách chi nhánh thuộc Kỳ thanh toán (Mẹ) đang chọn
+                const scopedEmployees = state.filters.paymentPeriod !== 'ALL'
+                    ? state.employees.filter(e => ((e.paymentPeriod || '').trim() || defaultPeriod) === state.filters.paymentPeriod)
+                    : state.employees;
+
                 const branches = Array.from(new Set(
-                    state.employees.map(e => (e.branch || '').trim() || 'Chưa phân chi nhánh')
+                    scopedEmployees.map(e => (e.branch || '').trim() || 'Chưa phân chi nhánh')
                 )).sort((a, b) => a.localeCompare(b, 'vi'));
 
                 branchSel.innerHTML = `<option value="ALL">Tất cả chi nhánh (${branches.length})</option>` +
@@ -1743,14 +1813,39 @@
             const statEmp = document.getElementById('statTotalEmployees');
             const statShifts = document.getElementById('statTotalShifts');
             const statMoney = document.getElementById('statTotalMoney');
+            const statExcess = document.getElementById('statTotalExcess');
+            const statCompletion = document.getElementById('statCompletionRate');
             if (statEmp) statEmp.textContent = filteredEmployees.length;
             if (statShifts) statShifts.textContent = grandTotalShifts;
             if (statMoney) statMoney.textContent = formatCurrency(grandTotalActual) + ' đ';
+            if (statExcess) statExcess.textContent = formatCurrency(grandTotalExcess) + ' đ';
+            if (statCompletion) {
+                const pct = grandTotalTarget > 0 ? Math.round((grandTotalActual / grandTotalTarget) * 100) : 0;
+                statCompletion.textContent = `${pct}%`;
+            }
 
             if (window.lucide) {
                 lucide.createIcons();
             }
         }
+
+        function toggleSystemMenu(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('systemMenuDropdown');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        function closeSystemMenu() {
+            const menu = document.getElementById('systemMenuDropdown');
+            if (menu) menu.classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('systemMenuWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeSystemMenu();
+            }
+        });
 
         // --- CÁC HÀM THAO TÁC DỮ LIỆU ---
         function randomizeAll(shouldSave = true) {
@@ -3097,6 +3192,8 @@
         window.triggerBackupFileInput = triggerBackupFileInput;
         window.handleBackupFileDrop = handleBackupFileDrop;
         window.handleBackupFileSelect = handleBackupFileSelect;
+        window.toggleSystemMenu = toggleSystemMenu;
+        window.closeSystemMenu = closeSystemMenu;
         window.openReportModal = openReportModal;
         window.closeReportModal = closeReportModal;
         window.setReportScope = setReportScope;
@@ -3477,13 +3574,17 @@
                                 ${branchesList.map((b, bIdx) => {
                                     const colSpanCount = reportScope === 'all' ? 7 : 6;
                                     let groupRows = `
-                                        <tr class="bg-slate-100/90 border-y border-slate-300">
-                                            <td colspan="${colSpanCount}" class="py-2 px-3 font-bold text-indigo-900 text-xs uppercase tracking-wide">
+                                        <tr class="bg-indigo-50/90 border-y border-indigo-200 font-bold text-indigo-950">
+                                            <td colspan="${reportScope === 'all' ? 3 : 2}" class="py-2 px-3 text-xs uppercase tracking-wide">
                                                 <div class="flex items-center gap-1.5">
                                                     <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-600"></i>
-                                                    <span>${bIdx + 1}. ${escapeHtml(b.branch)}</span>
+                                                    <span>${bIdx + 1}. ${escapeHtml(b.branch)} (${b.employees.length} NS)</span>
                                                 </div>
                                             </td>
+                                            <td class="py-2 px-3 text-right text-blue-800">${formatCurrency(b.totalTarget)}</td>
+                                            <td class="py-2 px-3 text-center text-emerald-800">${b.totalShifts}</td>
+                                            <td class="py-2 px-3 text-right text-slate-900">${formatCurrency(b.totalActual)}</td>
+                                            <td class="py-2 px-3 text-right ${b.totalExcess > 0 ? 'text-amber-700' : 'text-slate-500'}">${formatCurrency(b.totalExcess)}</td>
                                         </tr>
                                     `;
 

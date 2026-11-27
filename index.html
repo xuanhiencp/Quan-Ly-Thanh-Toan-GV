@@ -228,7 +228,7 @@
         </div>
     </main>
 
-    <!-- Modal Import Danh Sách (Excel / Dán nhanh) -->
+    <!-- Modal Import Danh Sách (Excel / Google Sheet / Dán nhanh) -->
     <div id="bulkModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-xl w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -310,11 +310,6 @@
                     <select id="googleSheetTabSelect"
                         class="w-full px-3 py-2 text-sm font-semibold text-slate-800 bg-white border border-emerald-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 cursor-pointer">
                     </select>
-                    <div class="pt-1 flex items-center gap-2">
-                        <input type="text" id="googleSheetCustomNameInput"
-                            placeholder="Hoặc gõ trực tiếp tên Sheet Tab (VD: Thang 08, Sheet1)..."
-                            class="flex-1 px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500">
-                    </div>
                 </div>
             </div>
 
@@ -463,10 +458,10 @@
             columnOrder: [...DEFAULT_COLUMN_ORDER],
             columnOrderCustomized: false,
             employees: [
-                { id: 1, name: "Nguyễn Thị Mai Anh", branch: "Cơ sở 1", targetMoney: 3500000, days: {} },
-                { id: 2, name: "Trần Văn Hoàng", branch: "Cơ sở 1", targetMoney: 4250000, days: {} },
-                { id: 3, name: "Lê Thị Thu Hà", branch: "Cơ sở 2", targetMoney: 3000000, days: {} },
-                { id: 4, name: "Phạm Minh Tuấn", branch: "Cơ sở 2", targetMoney: 5000000, days: {} }
+                { id: 1, name: "Nguyễn Thị Mai Anh", branch: "Sao Việt Tân Uyên", targetMoney: 3500000, days: {} },
+                { id: 2, name: "Trần Văn Hoàng", branch: "Sao Việt Tân Uyên", targetMoney: 4250000, days: {} },
+                { id: 3, name: "Lê Thị Thu Hà", branch: "Sao Việt Biên Hòa", targetMoney: 3000000, days: {} },
+                { id: 4, name: "Phạm Minh Tuấn", branch: "Sao Việt Biên Hòa", targetMoney: 5000000, days: {} }
             ]
         };
 
@@ -630,11 +625,9 @@
                 try {
                     if (!currentUser) return;
                     const userId = currentUser.uid;
-                    // Lưu riêng từng bảng theo tháng/năm vào collection timesheet_sheets
                     const sheetDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_sheets', currentKey);
                     await setDoc(sheetDocRef, payload);
 
-                    // Lưu con trỏ bảng đang mở gần nhất vào metadata
                     const metaDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', 'meta');
                     await setDoc(metaDocRef, {
                         activeSheetKey: currentKey,
@@ -726,14 +719,12 @@
             const targetKey = getSheetKey(newMonth, newYear);
 
             if (allSavedSheets[targetKey]) {
-                // Nếu tháng/năm này đã tồn tại trong DB -> tải nguyên bảng đó lên (giữ nguyên mọi dấu x đã chấm)
                 applySheetDataToState(allSavedSheets[targetKey]);
                 renderTable();
                 renderSavedSheetsBar();
                 scheduleAutoSave();
                 showToast(`Đã tải bảng đã lưu: Tháng ${String(newMonth).padStart(2, '0')}/${newYear}`, 'info');
             } else {
-                // Nếu là tháng/năm mới -> tạo bảng mới dựa trên danh sách nhân sự hiện tại & chấm công ngẫu nhiên cho tháng mới
                 state.employees = state.employees.map(emp => ({
                     ...emp,
                     days: {}
@@ -771,7 +762,6 @@
                 if (!currentUser) return;
                 const userId = currentUser.uid;
 
-                // 1. Tải toàn bộ các bảng đã lưu từ collection timesheet_sheets
                 const sheetsColRef = collection(db, 'artifacts', appId, 'users', userId, 'timesheet_sheets');
                 const sheetsSnap = await getDocs(sheetsColRef);
 
@@ -784,7 +774,6 @@
                     };
                 });
 
-                // 2. Kiểm tra dữ liệu cũ (migration nếu người dùng đã lưu ở doc current_sheet trước đó)
                 if (Object.keys(allSavedSheets).length === 0) {
                     const legacyDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', 'current_sheet');
                     const legacySnap = await getDoc(legacyDocRef);
@@ -804,7 +793,6 @@
                     }
                 }
 
-                // 3. Xác định bảng đang mở gần nhất
                 const metaDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', 'meta');
                 const metaSnap = await getDoc(metaDocRef);
                 const savedKeys = Object.keys(allSavedSheets).sort((a, b) => b.localeCompare(a));
@@ -867,12 +855,12 @@
             branch: {
                 key: 'branch',
                 label: 'Chi nhánh',
-                width: 130,
-                minWidth: 90,
+                width: 155,
+                minWidth: 100,
                 align: 'text-left',
                 headerClass: 'font-semibold text-slate-700',
                 renderCell: (emp) => `
-                    <input type="text" value="${escapeHtml(emp.branch || '')}" placeholder="Nhập chi nhánh..."
+                    <input type="text" value="${escapeHtml(emp.branch || '')}" placeholder="VD: Sao Việt Tân Uyên..."
                         onchange="updateEmpBranch(${emp.id}, this.value)"
                         class="w-full bg-transparent text-xs font-medium text-slate-600 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-1.5 py-1 outline-none transition-all">
                 `,
@@ -1426,7 +1414,7 @@
             const newEmp = {
                 id: nextId,
                 name: `Giáo viên mới ${nextId}`,
-                branch: "Chi nhánh 1",
+                branch: "Sao Việt Tân Uyên",
                 targetMoney: 2500000,
                 days: {}
             };
@@ -1551,221 +1539,6 @@
         };
         let gsFetchDebounceTimer = null;
 
-        // Tải dữ liệu một Sheet từ Google Sheets qua JSONP (không bị chặn CORS khi mở file HTML trực tiếp từ máy tính)
-        function fetchGoogleSheetViaJsonp(sheetId, params = {}, timeoutMs = 4500) {
-            return new Promise((resolve, reject) => {
-                const cbName = '__gsJsonpCb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
-                const script = document.createElement('script');
-                const timeoutId = setTimeout(() => {
-                    cleanup();
-                    reject(new Error('Hết thời gian chờ phản hồi từ Google Sheets'));
-                }, timeoutMs);
-
-                function cleanup() {
-                    clearTimeout(timeoutId);
-                    try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                }
-
-                window[cbName] = function (response) {
-                    cleanup();
-                    if (!response || response.status === 'error') {
-                        reject(new Error('Google Sheets từ chối truy cập hoặc sai tham số'));
-                        return;
-                    }
-                    const table = response.table;
-                    if (!table || !Array.isArray(table.rows)) {
-                        resolve({ rows: [], sig: '' });
-                        return;
-                    }
-
-                    const rows = [];
-                    const colLabels = (table.cols || []).map(c => (c && c.label ? String(c.label).trim() : ''));
-                    if (colLabels.some(l => l !== '')) {
-                        rows.push(colLabels);
-                    }
-
-                    table.rows.forEach(r => {
-                        const cells = (r && Array.isArray(r.c)) ? r.c : [];
-                        const rowArr = cells.map(cell => {
-                            if (!cell) return '';
-                            if (typeof cell.v === 'number') return cell.v;
-                            if (cell.f !== undefined && cell.f !== null) return String(cell.f);
-                            return cell.v !== undefined && cell.v !== null ? String(cell.v) : '';
-                        });
-                        rows.push(rowArr);
-                    });
-                    const sig = table.sig || JSON.stringify(rows.slice(0, 3));
-                    resolve({ rows, sig });
-                };
-
-                const queryParts = [`tqx=${encodeURIComponent('out:json;responseHandler:' + cbName)}`, 'headers=1'];
-                if (params.sheet) {
-                    queryParts.push(`sheet=${encodeURIComponent(params.sheet)}`);
-                } else if (params.gid !== undefined && params.gid !== null && params.gid !== '') {
-                    queryParts.push(`gid=${encodeURIComponent(params.gid)}`);
-                }
-
-                script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?${queryParts.join('&')}`;
-                script.onerror = function () {
-                    cleanup();
-                    reject(new Error('Lỗi kết nối tới Google Sheets'));
-                };
-                document.head.appendChild(script);
-            });
-        }
-
-        function parseTabsFromHtml(htmlText) {
-            if (!htmlText) return null;
-            const regex1 = /items\.push\(\{name:\s*"([^"]+)"[^}]*?gid:\s*"(\d+)"/g;
-            const regex2 = /"name"\s*:\s*"([^"]+)"[^}]*?"gid"\s*:\s*"(\d+)"/g;
-            let matches = [...htmlText.matchAll(regex1)];
-            if (matches.length === 0) {
-                matches = [...htmlText.matchAll(regex2)];
-            }
-            if (matches.length === 0) return null;
-
-            const seenGids = new Set();
-            const result = [];
-            matches.forEach((m, idx) => {
-                const gid = m[2];
-                if (seenGids.has(gid)) return;
-                seenGids.add(gid);
-                const decodedName = m[1].replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-                result.push({
-                    name: decodedName,
-                    index: idx,
-                    gid,
-                    value: `gid:${gid}`
-                });
-            });
-            return result.length > 0 ? result : null;
-        }
-
-        // Quét song song siêu tốc các Sheet Tab trực tiếp qua Google (không dùng proxy công cộng chậm/lỗi)
-        async function fetchGoogleSheetTabListFast(parsed) {
-            // Nhánh A: Tải workbook trực tiếp hoặc parse htmlview trực tiếp (không qua proxy bên thứ 3)
-            const directMetaPromise = Promise.any([
-                (async () => {
-                    const controller = new AbortController();
-                    const t = setTimeout(() => controller.abort(), 2200);
-                    try {
-                        const res = await fetch(parsed.xlsxUrl, { signal: controller.signal });
-                        clearTimeout(t);
-                        if (!res.ok) throw new Error('HTTP ' + res.status);
-                        const arrayBuf = await res.arrayBuffer();
-                        const workbook = XLSX.read(new Uint8Array(arrayBuf), { type: 'array' });
-                        const sheetMetaList = (workbook.Workbook && Array.isArray(workbook.Workbook.Sheets))
-                            ? workbook.Workbook.Sheets
-                            : [];
-                        const tabs = workbook.SheetNames.map((name, idx) => {
-                            const meta = sheetMetaList[idx] || {};
-                            const sheetIdAttr = meta.sheetId !== undefined ? String(meta.sheetId) : '';
-                            return { name, index: idx, gid: sheetIdAttr, value: `wb:${idx}` };
-                        });
-                        if (tabs.length === 0) throw new Error('Empty workbook');
-                        return { workbook, tabs };
-                    } catch (e) {
-                        clearTimeout(t);
-                        throw e;
-                    }
-                })(),
-                (async () => {
-                    const controller = new AbortController();
-                    const t = setTimeout(() => controller.abort(), 2200);
-                    try {
-                        const res = await fetch(parsed.htmlViewUrl, { signal: controller.signal });
-                        clearTimeout(t);
-                        if (!res.ok) throw new Error('HTTP ' + res.status);
-                        const htmlText = await res.text();
-                        const tabs = parseTabsFromHtml(htmlText);
-                        if (!tabs || tabs.length === 0) throw new Error('No tabs');
-                        return { workbook: null, tabs };
-                    } catch (e) {
-                        clearTimeout(t);
-                        throw e;
-                    }
-                })()
-            ]);
-
-            try {
-                return await directMetaPromise;
-            } catch (_) {
-                // Nhánh B: Khi mở từ file:// bị trình duyệt chặn CORS -> dùng JSONP song song tới Google Visualization
-                // Google Visualization trả về dữ liệu của tab đầu tiên nếu tên tab không tồn tại, nên ta dùng chữ ký (sig) của tab gốc để lọc ra đúng các tab có thật!
-                const baseRes = await fetchGoogleSheetViaJsonp(parsed.sheetId, { gid: '0' }, 3500);
-                const baseSig = baseRes.sig;
-
-                const foundTabs = [
-                    { name: 'Tab 1 (Mặc định / gid=0)', index: 0, gid: '0', value: 'gid:0' }
-                ];
-                if (parsed.gid && parsed.gid !== '0') {
-                    foundTabs.push({
-                        name: `Tab theo link (gid=${parsed.gid})`,
-                        index: 1,
-                        gid: parsed.gid,
-                        value: `gid:${parsed.gid}`
-                    });
-                }
-
-                // Danh sách tên tab phổ biến trong bảng chấm công để dò song song trong 1 lần gọi (mất ~400ms)
-                const candidateNames = [
-                    'Sheet1', 'Sheet2', 'Sheet3', 'Sheet4', 'Sheet5',
-                    'Trang tính1', 'Trang tính2', 'Trang tính3',
-                    'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-                    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
-                    'Tháng 01', 'Tháng 02', 'Tháng 03', 'Tháng 04', 'Tháng 05', 'Tháng 06',
-                    'Tháng 07', 'Tháng 08', 'Tháng 09',
-                    'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12',
-                    'T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09',
-                    'Thang 1', 'Thang 2', 'Thang 3', 'Thang 4', 'Thang 5', 'Thang 6',
-                    'Thang 7', 'Thang 8', 'Thang 9', 'Thang 10', 'Thang 11', 'Thang 12',
-                    'Thang 01', 'Thang 02', 'Thang 03', 'Thang 04', 'Thang 05', 'Thang 06',
-                    'Thang 07', 'Thang 08', 'Thang 09',
-                    'Danh sách', 'Tổng hợp', 'Chấm công', 'Data'
-                ];
-
-                const seenSigs = new Set([baseSig]);
-                const probes = candidateNames.map(async (tabName) => {
-                    try {
-                        const res = await fetchGoogleSheetViaJsonp(parsed.sheetId, { sheet: tabName }, 2500);
-                        if (res && res.rows && res.rows.length > 0 && res.sig && !seenSigs.has(res.sig)) {
-                            seenSigs.add(res.sig);
-                            return {
-                                name: tabName,
-                                index: foundTabs.length,
-                                gid: '',
-                                value: `sheet:${tabName}`
-                            };
-                        }
-                    } catch (_) {}
-                    return null;
-                });
-
-                const probeResults = await Promise.all(probes);
-                probeResults.forEach(item => {
-                    if (item) {
-                        foundTabs.push(item);
-                    }
-                });
-
-                // Nếu dò được tên thật của Tab 1 (trùng baseSig), cập nhật lại tên hiển thị cho Tab 1
-                const firstTabNameProbe = await Promise.any(
-                    ['Sheet1', 'Trang tính1', 'Tháng 08', 'Tháng 8', 'Tháng 09', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12', 'Tổng hợp', 'Chấm công'].map(async (name) => {
-                        const res = await fetchGoogleSheetViaJsonp(parsed.sheetId, { sheet: name }, 1500);
-                        if (res && res.sig === baseSig) return name;
-                        throw new Error('Not matching');
-                    })
-                ).catch(() => null);
-
-                if (firstTabNameProbe) {
-                    foundTabs[0].name = `${firstTabNameProbe} (Tab 1)`;
-                }
-
-                return { workbook: null, tabs: foundTabs };
-            }
-        }
-
         function onGoogleSheetUrlChanged(rawUrl) {
             if (gsFetchDebounceTimer) clearTimeout(gsFetchDebounceTimer);
             const parsed = parseGoogleSheetUrl(rawUrl);
@@ -1776,7 +1549,7 @@
             }
             gsFetchDebounceTimer = setTimeout(() => {
                 fetchGoogleSheetTabs(false);
-            }, 80);
+            }, 350);
         }
 
         async function fetchGoogleSheetTabs(forceReload = false) {
@@ -1804,55 +1577,105 @@
                 return;
             }
 
-            const initialGid = parsed.gid || '0';
             wrapper.classList.remove('hidden');
-            selectEl.innerHTML = `
-                <option value="gid:${initialGid}">Tab mặc định theo link (gid=${initialGid})</option>
-            `;
-            selectEl.disabled = false;
-
             if (statusEl) {
                 statusEl.className = 'text-[11px] font-medium text-amber-600';
-                statusEl.textContent = 'Đang dò nhanh các Sheet Tab...';
+                statusEl.textContent = 'Đang quét danh sách Sheet Tab...';
             }
+            selectEl.innerHTML = `<option value="">Đang tải danh sách các tab...</option>`;
+            selectEl.disabled = true;
 
             try {
-                const fastResult = await fetchGoogleSheetTabListFast(parsed);
-                if (fastResult && Array.isArray(fastResult.tabs) && fastResult.tabs.length > 0) {
+                const resXlsx = await fetch(parsed.xlsxUrl);
+                if (resXlsx.ok) {
+                    const arrayBuf = await resXlsx.arrayBuffer();
+                    const workbook = XLSX.read(new Uint8Array(arrayBuf), { type: 'array' });
+                    const sheetMetaList = (workbook.Workbook && Array.isArray(workbook.Workbook.Sheets))
+                        ? workbook.Workbook.Sheets
+                        : [];
+
+                    const tabs = workbook.SheetNames.map((name, idx) => {
+                        const meta = sheetMetaList[idx] || {};
+                        const sheetIdAttr = meta.sheetId !== undefined ? String(meta.sheetId) : '';
+                        return {
+                            name,
+                            index: idx,
+                            gid: sheetIdAttr,
+                            value: `wb:${idx}`
+                        };
+                    });
+
                     gsWorkbookCache = {
                         sheetId: parsed.sheetId,
-                        workbook: fastResult.workbook,
-                        tabs: fastResult.tabs
+                        workbook,
+                        tabs
                     };
 
-                    selectEl.innerHTML = fastResult.tabs.map(t =>
+                    selectEl.innerHTML = tabs.map(t =>
                         `<option value="${t.value}">${escapeHtml(t.name)}</option>`
                     ).join('');
                     selectEl.disabled = false;
 
                     if (parsed.gid) {
-                        const matched = fastResult.tabs.find(t => String(t.gid) === String(parsed.gid));
-                        if (matched) selectEl.value = matched.value;
+                        const matchedTab = tabs.find(t => t.gid === String(parsed.gid));
+                        if (matchedTab) selectEl.value = matchedTab.value;
                     }
 
                     if (statusEl) {
                         statusEl.className = 'text-[11px] font-semibold text-emerald-700';
-                        statusEl.textContent = `Đã tìm thấy ${fastResult.tabs.length} Sheet Tab`;
+                        statusEl.textContent = `Tìm thấy ${tabs.length} Sheet Tab`;
                     }
+                    if (window.lucide) lucide.createIcons();
                     return;
                 }
-                throw new Error('Không tìm thấy danh sách tab');
+
+                const resHtml = await fetch(parsed.htmlViewUrl);
+                if (resHtml.ok) {
+                    const htmlText = await resHtml.text();
+                    const tabMatches = [...htmlText.matchAll(/items\.push\(\{name:\s*"([^"]+)"[^}]*?gid:\s*"(\d+)"/g)];
+                    if (tabMatches.length > 0) {
+                        const tabs = tabMatches.map((m, idx) => ({
+                            name: m[1].replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16))),
+                            index: idx,
+                            gid: m[2],
+                            value: `gid:${m[2]}`
+                        }));
+
+                        gsWorkbookCache = {
+                            sheetId: parsed.sheetId,
+                            workbook: null,
+                            tabs
+                        };
+
+                        selectEl.innerHTML = tabs.map(t =>
+                            `<option value="${t.value}">${escapeHtml(t.name)}</option>`
+                        ).join('');
+                        selectEl.disabled = false;
+
+                        if (parsed.gid) {
+                            const matched = tabs.find(t => t.gid === String(parsed.gid));
+                            if (matched) selectEl.value = matched.value;
+                        }
+
+                        if (statusEl) {
+                            statusEl.className = 'text-[11px] font-semibold text-emerald-700';
+                            statusEl.textContent = `Tìm thấy ${tabs.length} Sheet Tab`;
+                        }
+                        if (window.lucide) lucide.createIcons();
+                        return;
+                    }
+                }
+
+                throw new Error('Không thể đọc danh sách tab');
             } catch (err) {
-                console.warn('Chế độ nhập tên tab / gid trực tiếp:', err);
+                console.error('Lỗi lấy danh sách Sheet Tab:', err);
                 gsWorkbookCache = { sheetId: parsed.sheetId, workbook: null, tabs: [] };
-                selectEl.innerHTML = `
-                    <option value="gid:${initialGid}">Tab theo link hiện tại (gid=${initialGid})</option>
-                    <option value="gid:0">Tab đầu tiên (gid=0)</option>
-                `;
+                const fallbackGid = parsed.gid || '0';
+                selectEl.innerHTML = `<option value="gid:${fallbackGid}">Tab mặc định (gid=${fallbackGid})</option>`;
                 selectEl.disabled = false;
                 if (statusEl) {
-                    statusEl.className = 'text-[11px] font-medium text-emerald-700';
-                    statusEl.textContent = 'Sẵn sàng (có thể gõ tên Tab bên dưới)';
+                    statusEl.className = 'text-[11px] font-medium text-amber-600';
+                    statusEl.textContent = 'Không quét được tên tab (hãy kiểm tra quyền chia sẻ)';
                 }
             }
         }
@@ -1860,7 +1683,6 @@
         async function importFromGoogleSheetUrl() {
             const urlInput = document.getElementById('googleSheetUrlInput');
             const selectEl = document.getElementById('googleSheetTabSelect');
-            const customNameInput = document.getElementById('googleSheetCustomNameInput');
             const rawUrl = urlInput ? urlInput.value.trim() : '';
             if (!rawUrl) {
                 showToast('Vui lòng dán đường link Google Sheets vào ô trống.', 'warning');
@@ -1874,30 +1696,24 @@
                 return;
             }
 
+            if (gsWorkbookCache.sheetId !== parsedInfo.sheetId) {
+                await fetchGoogleSheetTabs(false);
+            }
+
             const confirmBtn = document.getElementById('btnConfirmImport');
             const originalHtml = confirmBtn ? confirmBtn.innerHTML : '';
             if (confirmBtn) {
                 confirmBtn.disabled = true;
-                confirmBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Đang tải dữ liệu...</span>`;
+                confirmBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Đang import dữ liệu...</span>`;
                 if (window.lucide) lucide.createIcons();
             }
 
             try {
-                const customSheetName = customNameInput ? customNameInput.value.trim() : '';
                 const selectedVal = selectEl ? selectEl.value : '';
-                const selectedTabLabel = customSheetName
-                    || ((selectEl && selectEl.selectedOptions[0]) ? selectEl.selectedOptions[0].textContent : 'Google Sheets');
+                const selectedTabLabel = (selectEl && selectEl.selectedOptions[0])
+                    ? selectEl.selectedOptions[0].textContent
+                    : 'Google Sheets';
 
-                // 1. Ưu tiên tên Tab gõ tay hoặc lựa chọn dạng sheet:TênTab
-                const directSheetName = customSheetName || (selectedVal.startsWith('sheet:') ? selectedVal.slice(6) : '');
-                if (directSheetName) {
-                    const namedRes = await fetchGoogleSheetViaJsonp(parsedInfo.sheetId, { sheet: directSheetName }, 4500);
-                    const importedList = extractEmployeesFromRows(namedRes.rows);
-                    applyImportedList(importedList, `Google Sheet (${directSheetName})`);
-                    return;
-                }
-
-                // 2. Nếu đã có workbook trong bộ nhớ đệm
                 if (gsWorkbookCache.sheetId === parsedInfo.sheetId && gsWorkbookCache.workbook && selectedVal.startsWith('wb:')) {
                     const sheetIdx = parseInt(selectedVal.split(':')[1], 10) || 0;
                     const sheetName = gsWorkbookCache.workbook.SheetNames[sheetIdx];
@@ -1913,18 +1729,41 @@
                     ? selectedVal.split(':')[1]
                     : (parsedInfo.gid || '0');
 
-                // 3. Tải trực tiếp qua JSONP theo gid (nhanh & không bị CORS khi chạy file://)
-                const jsonpRes = await fetchGoogleSheetViaJsonp(parsedInfo.sheetId, { gid: targetGid }, 4500);
-                if (jsonpRes && Array.isArray(jsonpRes.rows) && jsonpRes.rows.length > 0) {
-                    const importedList = extractEmployeesFromRows(jsonpRes.rows);
-                    applyImportedList(importedList, `Google Sheet (${selectedTabLabel})`);
+                const gvizUrlByGid = `https://docs.google.com/spreadsheets/d/${parsedInfo.sheetId}/gviz/tq?tqx=out:csv&gid=${targetGid}`;
+                const csvUrlByGid = `https://docs.google.com/spreadsheets/d/${parsedInfo.sheetId}/export?format=csv&gid=${targetGid}`;
+
+                let csvText = '';
+                try {
+                    const resGviz = await fetch(gvizUrlByGid);
+                    if (resGviz.ok) {
+                        csvText = await resGviz.text();
+                    }
+                } catch (_) {
+                    // Fallback sang URL export CSV bên dưới
+                }
+
+                if (!csvText || csvText.trim().startsWith('<!DOCTYPE html')) {
+                    const resExport = await fetch(csvUrlByGid);
+                    if (!resExport.ok) {
+                        throw new Error('Không thể truy cập Google Sheet');
+                    }
+                    csvText = await resExport.text();
+                }
+
+                if (!csvText || csvText.trim().startsWith('<!DOCTYPE html')) {
+                    showToast('Không đọc được dữ liệu. Hãy đảm bảo file Google Sheet đã bật quyền "Bất kỳ ai có liên kết đều xem được"!', 'warning');
                     return;
                 }
 
-                throw new Error('Không có dữ liệu từ Sheet');
+                const workbook = XLSX.read(csvText, { type: 'string' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                const importedList = extractEmployeesFromRows(rows);
+                applyImportedList(importedList, `Google Sheet (${selectedTabLabel})`);
             } catch (err) {
                 console.error('Lỗi import Google Sheet:', err);
-                showToast('Không đọc được dữ liệu. Hãy đảm bảo file Google Sheet đã mở quyền "Bất kỳ ai có liên kết đều xem được"!', 'warning');
+                showToast('Không thể kết nối tới Google Sheet. Vui lòng kiểm tra quyền chia sẻ công khai của file!', 'warning');
             } finally {
                 if (confirmBtn) {
                     confirmBtn.disabled = false;
@@ -1966,6 +1805,29 @@
             return true;
         }
 
+        function isBankRelatedHeader(headerText) {
+            const txt = String(headerText || '').toLowerCase().trim();
+            return (
+                txt.includes('ngân hàng') ||
+                txt.includes('bank') ||
+                txt.includes('stk') ||
+                txt.includes('số tài khoản') ||
+                txt.includes('tài khoản') ||
+                txt.includes('chủ tài khoản') ||
+                txt.includes('pgd') ||
+                txt.includes('phòng giao dịch')
+            );
+        }
+
+        function isBankRelatedValue(cellVal) {
+            const txt = String(cellVal || '').toLowerCase().trim();
+            return (
+                /\b(vietcombank|vcb|techcombank|tcb|bidv|agribank|vietinbank|mb\s*bank|mbbank|acb|sacombank|vpbank|tpbank|hdbank|vib|ocb|msb|shb|eximbank|seabank|abbank|nam\s*a|bắc\s*á|liên\s*việt|lpbank|pgbank|kienlongbank|vietbank)\b/i.test(txt) ||
+                txt.includes('ngân hàng') ||
+                txt.includes('pgd ')
+            );
+        }
+
         function extractEmployeesFromRows(rows) {
             const parsed = [];
             if (!rows || rows.length === 0) return parsed;
@@ -1974,16 +1836,38 @@
             let branchColIdx = -1;
             let moneyColIdx = -1;
             let startRow = 0;
+            const bankColIndices = new Set();
 
             for (let r = 0; r < Math.min(rows.length, 6); r++) {
                 const row = rows[r] || [];
                 row.forEach((cell, idx) => {
                     const txt = String(cell || '').toLowerCase().trim();
+                    if (!txt) return;
+
+                    // Đánh dấu các cột liên quan đến ngân hàng (VD: "Chi nhánh ngân hàng", "Ngân hàng", "STK") để bỏ qua
+                    if (isBankRelatedHeader(txt)) {
+                        bankColIndices.add(idx);
+                        return;
+                    }
+
                     if (txt.includes('họ') || txt.includes('tên') || txt.includes('giáo viên') || txt.includes('nhân viên') || txt.includes('name')) {
                         nameColIdx = idx;
                     }
-                    if (txt.includes('chi nhánh') || txt.includes('cơ sở') || txt.includes('branch') || txt.includes('địa điểm')) {
-                        branchColIdx = idx;
+                    if (
+                        txt.includes('chi nhánh làm việc') ||
+                        txt.includes('chi nhánh công tác') ||
+                        txt.includes('đơn vị công tác') ||
+                        txt === 'chi nhánh' ||
+                        txt === 'cơ sở' ||
+                        txt.includes('chi nhánh') ||
+                        txt.includes('cơ sở') ||
+                        txt.includes('branch') ||
+                        txt.includes('địa điểm')
+                    ) {
+                        // Ưu tiên cột "chi nhánh làm việc / cơ sở" nếu chưa chọn hoặc nếu cột trước đó chung chung hơn
+                        if (branchColIdx === -1 || txt.includes('làm việc') || txt.includes('cơ sở')) {
+                            branchColIdx = idx;
+                        }
                     }
                     if (txt.includes('tiền') || txt.includes('lương') || txt.includes('tổng') || txt.includes('thành tiền') || txt.includes('amount') || txt.includes('money')) {
                         moneyColIdx = idx;
@@ -2008,11 +1892,15 @@
 
                 if (nameColIdx !== -1 && moneyColIdx !== -1) {
                     name = String(row[nameColIdx] || '').trim();
-                    if (branchColIdx !== -1) branch = String(row[branchColIdx] || '').trim();
+                    if (branchColIdx !== -1 && !bankColIndices.has(branchColIdx)) {
+                        const rawBranch = String(row[branchColIdx] || '').trim();
+                        branch = isBankRelatedValue(rawBranch) ? '' : rawBranch;
+                    }
                     money = parseCurrency(row[moneyColIdx]);
                 } else {
                     let textCells = [];
-                    row.forEach((cell) => {
+                    row.forEach((cell, idx) => {
+                        if (bankColIndices.has(idx)) return;
                         const rawStr = String(cell ?? '').trim();
                         if (!rawStr) return;
 
@@ -2026,7 +1914,11 @@
                         }
                     });
                     if (textCells.length > 0) name = textCells[0];
-                    if (textCells.length > 1) branch = textCells[1];
+                    if (textCells.length > 1) {
+                        // Tìm ô văn bản chi nhánh làm việc (ưu tiên từ khóa cơ sở/trung tâm hoặc bỏ qua tên ngân hàng)
+                        const workBranchCandidate = textCells.slice(1).find(val => !isBankRelatedValue(val));
+                        branch = workBranchCandidate || '';
+                    }
                 }
 
                 if (name && money > 0) {
@@ -2080,7 +1972,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // --- MODAL IMPORT (EXCEL / PASTE) ---
+        // --- MODAL IMPORT (EXCEL / GOOGLE SHEET / PASTE) ---
         function openBulkModal(defaultTab = 'excel-file') {
             const modal = document.getElementById('bulkModal');
             if (!modal) return;
@@ -2140,11 +2032,11 @@
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet(`ChamCong_T${state.month}_${state.year}`, {
                 pageSetup: {
-                    paperSize: 9, // Khổ giấy A4
-                    orientation: 'landscape', // Khổ ngang
+                    paperSize: 9,
+                    orientation: 'landscape',
                     fitToPage: true,
-                    fitToWidth: 1, // Ép vừa khít 1 trang ngang khi in
-                    fitToHeight: 0, // Tự động chia trang dọc theo số lượng nhân sự
+                    fitToWidth: 1,
+                    fitToHeight: 0,
                     horizontalCentered: true,
                     margins: {
                         left: 0.25,
@@ -2166,7 +2058,6 @@
                 right: { style: 'thin', color: { argb: 'FF94A3B8' } }
             };
 
-            // 1. Tiêu đề chính (Dòng 1 & 2)
             worksheet.mergeCells(1, 1, 1, totalCols);
             const titleCell = worksheet.getCell(1, 1);
             titleCell.value = `BẢNG CHẤM CÔNG THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
@@ -2182,7 +2073,6 @@
             worksheet.getRow(2).height = 18;
             worksheet.getRow(3).height = 8;
 
-            // 2. Tiêu đề cột (Dòng 4 & 5)
             const excelColMeta = {
                 stt: { header: 'STT', width: 5, align: 'center' },
                 name: { header: 'Họ và tên', width: 24, align: 'left' },
@@ -2235,7 +2125,6 @@
                 cDow.border = thinBorder;
             }
 
-            // 3. Dữ liệu từng nhân sự
             let grandTarget = 0;
             let grandShifts = 0;
             let grandMoney = 0;
@@ -2302,7 +2191,6 @@
                 }
             });
 
-            // 4. Dòng Tổng Cộng
             const totalRowIdx = 6 + state.employees.length;
             const totalRow = worksheet.getRow(totalRowIdx);
             totalRow.height = 22;
@@ -2337,7 +2225,6 @@
                 cell.border = thinBorder;
             }
 
-            // 5. Khu vực ký xác nhận cuối trang in
             const signStartRow = totalRowIdx + 2;
             worksheet.getRow(signStartRow).height = 18;
             worksheet.getRow(signStartRow + 1).height = 16;
@@ -2368,7 +2255,6 @@
             approverSub.font = { ...fontMain, italic: true, size: 9 };
             approverSub.alignment = { horizontal: 'center', vertical: 'middle' };
 
-            // 6. Căn chỉnh độ rộng từng cột tối ưu cho trang A4 ngang
             state.columnOrder.forEach((colKey, idx) => {
                 worksheet.getColumn(idx + 1).width = excelColMeta[colKey].width;
             });
@@ -2376,7 +2262,6 @@
                 worksheet.getColumn(state.columnOrder.length + d).width = 3.1;
             }
 
-            // Xuất file tải về
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
@@ -2393,7 +2278,6 @@
 
         // --- CHỨC NĂNG BACKUP & KHÔI PHỤC TOÀN BỘ DATABASE (.JSON) ---
         function openBackupModal() {
-            // Cập nhật dữ liệu bảng hiện tại vào bộ nhớ trước khi thống kê
             const currentKey = getSheetKey();
             const currentPayload = buildCurrentSheetPayload();
             allSavedSheets[currentKey] = {
@@ -2429,7 +2313,6 @@
         }
 
         function exportDatabaseBackup() {
-            // Đồng bộ trạng thái hiện tại vào allSavedSheets trước khi đóng gói file
             const currentKey = getSheetKey();
             const currentPayload = buildCurrentSheetPayload();
             allSavedSheets[currentKey] = {
@@ -2534,7 +2417,6 @@
                     const modeInput = document.querySelector('input[name="restoreMode"]:checked');
                     const mode = modeInput ? modeInput.value : 'merge';
 
-                    // Nếu chế độ thay thế toàn bộ -> xóa các bảng cũ trên Firestore
                     if (mode === 'replace') {
                         if (db && currentUser) {
                             const oldKeys = Object.keys(allSavedSheets);
@@ -2549,7 +2431,6 @@
                         allSavedSheets = {};
                     }
 
-                    // Nạp & đồng bộ từng bảng từ file backup vào bộ nhớ + hệ thống lưu trữ
                     for (const key of incomingKeys) {
                         const rawSheet = parsed.sheets[key];
                         const empList = Array.isArray(rawSheet.employees)
@@ -2590,7 +2471,6 @@
                         }
                     }
 
-                    // Xác định bảng hiển thị sau khi khôi phục
                     const sortedKeys = Object.keys(allSavedSheets).sort((a, b) => b.localeCompare(a));
                     const targetActiveKey = (parsed.activeSheetKey && allSavedSheets[parsed.activeSheetKey])
                         ? parsed.activeSheetKey
@@ -2661,7 +2541,7 @@
         window.exportToExcel = exportToExcel;
 
         // --- MẪU BÁO CÁO TỔNG HỢP THEO CHI NHÁNH & NHÂN VIÊN ---
-        let reportScope = 'current'; // 'current' | 'all'
+        let reportScope = 'current';
 
         function openReportModal() {
             const currentKey = getSheetKey();
@@ -2801,7 +2681,6 @@
                 bGroup.totalActual += rec.actualMoney;
                 bGroup.totalExcess += rec.excessMoney;
 
-                // Nếu tổng hợp nhiều tháng, gộp theo Tên nhân viên trong từng chi nhánh
                 const empKey = rec.name.toLowerCase();
                 if (!bGroup.empMap.has(empKey)) {
                     bGroup.empMap.set(empKey, {
@@ -2865,7 +2744,6 @@
                 return;
             }
 
-            // 1. Các thẻ KPI tổng quan
             let html = `
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
@@ -2891,7 +2769,6 @@
                 </div>
             `;
 
-            // 2. Bảng I: Tổng hợp theo từng Chi nhánh
             html += `
                 <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
                     <div class="px-4 py-3 bg-sky-50/80 border-b border-slate-200 flex items-center justify-between">
@@ -2952,7 +2829,6 @@
                 </div>
             `;
 
-            // 3. Bảng II: Chi tiết Nhân viên phân nhóm theo từng Chi nhánh
             html += `
                 <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
                     <div class="px-4 py-3 bg-indigo-50/80 border-b border-slate-200 flex items-center justify-between">
@@ -3055,7 +2931,6 @@
                 ? `THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`
                 : `TỔNG HỢP TẤT CẢ CÁC THÁNG (${Object.keys(allSavedSheets).length} KỲ)`;
 
-            // Tiêu đề báo cáo
             ws.mergeCells('A1:G1');
             const c1 = ws.getCell('A1');
             c1.value = `BÁO CÁO TỔNG HỢP CHẤM CÔNG THEO CHI NHÁNH & NHÂN VIÊN`;
@@ -3070,7 +2945,6 @@
             c2.alignment = { horizontal: 'center', vertical: 'middle' };
             ws.getRow(2).height = 18;
 
-            // PHẦN I: TỔNG HỢP THEO CHI NHÁNH
             ws.mergeCells('A4:G4');
             const sec1 = ws.getCell('A4');
             sec1.value = 'I. TỔNG HỢP CHẤM CÔNG THEO CHI NHÁNH';
@@ -3124,7 +2998,6 @@
             });
 
             curRow += 1;
-            // PHẦN II: CHI TIẾT NHÂN VIÊN THEO TỪNG CHI NHÁNH
             ws.mergeCells(curRow, 1, curRow, 7);
             const sec2 = ws.getCell(curRow, 1);
             sec2.value = 'II. CHI TIẾT NHÂN VIÊN THEO TỪNG CHI NHÁNH';
@@ -3174,7 +3047,6 @@
                 });
             });
 
-            // Chữ ký cuối báo cáo
             curRow += 1;
             ws.mergeCells(curRow, 1, curRow, 3);
             ws.getCell(curRow, 1).value = 'Người lập báo cáo';

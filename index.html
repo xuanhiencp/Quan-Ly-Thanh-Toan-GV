@@ -24,7 +24,7 @@
         .day-cell.checked {
             background-color: #dbeafe;
             color: #1d4ed8;
-            font-weight: 700;
+            font-weight: 400;
         }
         .col-dragging {
             opacity: 0.45;
@@ -191,7 +191,7 @@
                         <i data-lucide="hard-drive-download" class="w-3.5 h-3.5"></i>
                         <span>Backup / Khôi Phục DB</span>
                     </button>
-                    <button onclick="openReportModal()" title="Xem và xuất báo cáo tổng hợp theo chi nhánh và nhân viên" class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">
+                    <button onclick="openReportModal()" title="Xem và xuất báo cáo tổng hợp theo kỳ thanh toán, chi nhánh và nhân viên" class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">
                         <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
                         <span>Báo Cáo Tổng Hợp</span>
                     </button>
@@ -216,6 +216,38 @@
                 <div id="savedSheetsList" class="flex flex-wrap items-center gap-1.5">
                     <span class="text-slate-400 italic">Đang tải danh sách bảng...</span>
                 </div>
+            </div>
+
+            <!-- Thanh bộ lọc theo Chi nhánh, Kỳ thanh toán & Tên nhân sự -->
+            <div class="px-3.5 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+                        <i data-lucide="filter" class="w-3.5 h-3.5 text-blue-600"></i>
+                        Bộ lọc hiển thị:
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                        <label for="filterPeriod" class="text-slate-500 font-medium">Kỳ thanh toán:</label>
+                        <select id="filterPeriod" onchange="onTableFilterChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
+                            <option value="ALL">Tất cả kỳ thanh toán</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <label for="filterBranch" class="text-slate-500 font-medium">Chi nhánh:</label>
+                        <select id="filterBranch" onchange="onTableFilterChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
+                            <option value="ALL">Tất cả chi nhánh</option>
+                        </select>
+                    </div>
+                    <div class="relative flex items-center">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none"></i>
+                        <input type="text" id="filterNameInput" oninput="onTableFilterChange()" placeholder="Tìm theo tên nhân sự..."
+                            class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 w-48 sm:w-56">
+                    </div>
+                    <button id="btnResetTableFilters" onclick="resetTableFilters()" class="hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold border border-rose-200 transition-colors cursor-pointer">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                        <span>Xóa lọc</span>
+                    </button>
+                </div>
+                <div id="filterResultSummary" class="text-slate-500 font-medium"></div>
             </div>
 
             <div class="table-container overflow-x-auto max-h-[64vh]">
@@ -429,11 +461,19 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2">
-                    <label for="reportBranchFilter" class="font-semibold text-slate-600">Lọc chi nhánh:</label>
-                    <select id="reportBranchFilter" onchange="renderReportContent()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-sky-500 cursor-pointer">
-                        <option value="ALL">Tất cả chi nhánh</option>
-                    </select>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-1.5">
+                        <label for="reportPeriodFilter" class="font-semibold text-slate-600">Kỳ thanh toán:</label>
+                        <select id="reportPeriodFilter" onchange="onReportFilterChange()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-sky-500 cursor-pointer">
+                            <option value="ALL">Tất cả kỳ thanh toán</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <label for="reportBranchFilter" class="font-semibold text-slate-600">Chi nhánh:</label>
+                        <select id="reportBranchFilter" onchange="onReportFilterChange()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-700 focus:outline-none focus:border-sky-500 cursor-pointer">
+                            <option value="ALL">Tất cả chi nhánh</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -449,7 +489,11 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        const DEFAULT_COLUMN_ORDER = ['stt', 'branch', 'name', 'targetMoney', 'excessMoney', 'totalShifts', 'totalMoney'];
+        const DEFAULT_COLUMN_ORDER = ['stt', 'paymentPeriod', 'branch', 'name', 'targetMoney', 'excessMoney', 'totalShifts', 'totalMoney'];
+
+        function getDefaultPaymentPeriod(m = 8, y = 2026) {
+            return `Tháng ${String(m).padStart(2, '0')}/${y}`;
+        }
 
         const state = {
             month: 8,
@@ -457,11 +501,16 @@
             rate: 250000,
             columnOrder: [...DEFAULT_COLUMN_ORDER],
             columnOrderCustomized: false,
+            filters: {
+                paymentPeriod: 'ALL',
+                branch: 'ALL',
+                nameQuery: ''
+            },
             employees: [
-                { id: 1, name: "Nguyễn Thị Mai Anh", branch: "Sao Việt Tân Uyên", targetMoney: 3500000, days: {} },
-                { id: 2, name: "Trần Văn Hoàng", branch: "Sao Việt Tân Uyên", targetMoney: 4250000, days: {} },
-                { id: 3, name: "Lê Thị Thu Hà", branch: "Sao Việt Biên Hòa", targetMoney: 3000000, days: {} },
-                { id: 4, name: "Phạm Minh Tuấn", branch: "Sao Việt Biên Hòa", targetMoney: 5000000, days: {} }
+                { id: 1, name: "Nguyễn Thị Mai Anh", branch: "Sao Việt Tân Uyên", paymentPeriod: "Tháng 08/2026", targetMoney: 3500000, days: {} },
+                { id: 2, name: "Trần Văn Hoàng", branch: "Sao Việt Tân Uyên", paymentPeriod: "Tháng 08/2026", targetMoney: 4250000, days: {} },
+                { id: 3, name: "Lê Thị Thu Hà", branch: "Sao Việt Biên Hòa", paymentPeriod: "Tháng 08/2026", targetMoney: 3000000, days: {} },
+                { id: 4, name: "Phạm Minh Tuấn", branch: "Sao Việt Biên Hòa", paymentPeriod: "Tháng 08/2026", targetMoney: 5000000, days: {} }
             ]
         };
 
@@ -581,6 +630,10 @@
 
             if (Array.isArray(data.columnOrder) && data.columnOrder.length > 0 && data.columnOrderCustomized) {
                 state.columnOrder = [...data.columnOrder];
+                if (!state.columnOrder.includes('paymentPeriod')) {
+                    const branchIdx = state.columnOrder.indexOf('branch');
+                    state.columnOrder.splice(branchIdx !== -1 ? branchIdx : 1, 0, 'paymentPeriod');
+                }
                 state.columnOrderCustomized = true;
             } else {
                 state.columnOrder = [...DEFAULT_COLUMN_ORDER];
@@ -595,18 +648,27 @@
                 });
             }
 
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
             if (Array.isArray(data.employees)) {
                 state.employees = data.employees.map(emp => ({
                     ...emp,
                     branch: emp.branch || '',
+                    paymentPeriod: emp.paymentPeriod || defaultPeriod,
                     days: emp.days || {}
                 }));
             } else if (data.employeesJson) {
                 const parsedEmployees = JSON.parse(data.employeesJson);
                 state.employees = Array.isArray(parsedEmployees)
-                    ? parsedEmployees.map(emp => ({ ...emp, branch: emp.branch || '', days: emp.days || {} }))
+                    ? parsedEmployees.map(emp => ({
+                        ...emp,
+                        branch: emp.branch || '',
+                        paymentPeriod: emp.paymentPeriod || defaultPeriod,
+                        days: emp.days || {}
+                    }))
                     : [];
             }
+
+            state.filters = { paymentPeriod: 'ALL', branch: 'ALL', nameQuery: '' };
         }
 
         function scheduleAutoSave() {
@@ -698,10 +760,12 @@
             }
 
             const sourceSheet = allSavedSheets[otherKeys[0]];
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
             state.employees = sourceSheet.employees.map((emp, idx) => ({
                 id: idx + 1,
                 name: emp.name,
                 branch: emp.branch || '',
+                paymentPeriod: defaultPeriod,
                 targetMoney: emp.targetMoney || 0,
                 days: {}
             }));
@@ -725,8 +789,10 @@
                 scheduleAutoSave();
                 showToast(`Đã tải bảng đã lưu: Tháng ${String(newMonth).padStart(2, '0')}/${newYear}`, 'info');
             } else {
+                const defaultPeriod = getDefaultPaymentPeriod(newMonth, newYear);
                 state.employees = state.employees.map(emp => ({
                     ...emp,
+                    paymentPeriod: defaultPeriod,
                     days: {}
                 }));
                 randomizeAll(true);
@@ -835,7 +901,36 @@
                 minWidth: 40,
                 align: 'text-center',
                 headerClass: 'font-semibold text-slate-700',
-                renderCell: (emp, idx) => `<span class="text-slate-400 font-medium">${idx + 1}</span>`,
+                renderCell: (emp, idx) => `<span class="text-slate-400 font-normal">${idx + 1}</span>`,
+                renderTotal: () => ''
+            },
+            paymentPeriod: {
+                key: 'paymentPeriod',
+                label: 'Kỳ thanh toán',
+                width: 140,
+                minWidth: 100,
+                align: 'text-left',
+                headerClass: 'font-semibold text-sky-800 bg-sky-50/50',
+                cellBg: 'bg-sky-50/10',
+                renderCell: (emp) => `
+                    <input type="text" value="${escapeHtml(emp.paymentPeriod || getDefaultPaymentPeriod(state.month, state.year))}" placeholder="VD: Tháng 08/2026"
+                        onchange="updateEmpPaymentPeriod(${emp.id}, this.value)"
+                        class="w-full bg-transparent text-xs font-normal text-sky-900 focus:bg-white focus:ring-2 focus:ring-sky-500 rounded px-1.5 py-1 outline-none transition-all">
+                `,
+                renderTotal: () => ''
+            },
+            branch: {
+                key: 'branch',
+                label: 'Chi nhánh',
+                width: 165,
+                minWidth: 100,
+                align: 'text-left',
+                headerClass: 'font-semibold text-slate-700',
+                renderCell: (emp) => `
+                    <input type="text" value="${escapeHtml(emp.branch || '')}" placeholder="VD: Sao Việt Tân Uyên..."
+                        onchange="updateEmpBranch(${emp.id}, this.value)"
+                        class="w-full bg-transparent text-xs font-normal text-slate-600 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-1.5 py-1 outline-none transition-all">
+                `,
                 renderTotal: () => ''
             },
             name: {
@@ -848,21 +943,7 @@
                 renderCell: (emp) => `
                     <input type="text" value="${escapeHtml(emp.name)}"
                         onchange="updateEmpName(${emp.id}, this.value)"
-                        class="w-full bg-transparent font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-1.5 py-1 outline-none transition-all">
-                `,
-                renderTotal: () => ''
-            },
-            branch: {
-                key: 'branch',
-                label: 'Chi nhánh',
-                width: 155,
-                minWidth: 100,
-                align: 'text-left',
-                headerClass: 'font-semibold text-slate-700',
-                renderCell: (emp) => `
-                    <input type="text" value="${escapeHtml(emp.branch || '')}" placeholder="VD: Sao Việt Tân Uyên..."
-                        onchange="updateEmpBranch(${emp.id}, this.value)"
-                        class="w-full bg-transparent text-xs font-medium text-slate-600 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-1.5 py-1 outline-none transition-all">
+                        class="w-full bg-transparent font-normal text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded px-1.5 py-1 outline-none transition-all">
                 `,
                 renderTotal: () => ''
             },
@@ -878,9 +959,9 @@
                     <input type="text" value="${formatCurrency(emp.targetMoney)}"
                         onchange="updateEmpMoney(${emp.id}, this.value)"
                         onfocus="this.select()"
-                        class="w-full text-right bg-white border border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-2 py-1 font-bold text-blue-700 outline-none transition-all">
+                        class="w-full text-right bg-white border border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-2 py-1 font-normal text-blue-700 outline-none transition-all">
                 `,
-                renderTotal: (totals) => `<span class="text-blue-700">${formatCurrency(totals.targetMoney)}</span>`
+                renderTotal: (totals) => `<span class="text-blue-700 font-bold">${formatCurrency(totals.targetMoney)}</span>`
             },
             totalShifts: {
                 key: 'totalShifts',
@@ -895,9 +976,9 @@
                     const badgeClass = isMatched
                         ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                         : 'bg-amber-100 text-amber-800 border-amber-200';
-                    return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold border ${badgeClass}">${stats.shifts}</span>`;
+                    return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-normal border ${badgeClass}">${stats.shifts}</span>`;
                 },
-                renderTotal: (totals) => `<span class="text-emerald-700">${totals.shifts}</span>`
+                renderTotal: (totals) => `<span class="text-emerald-700 font-bold">${totals.shifts}</span>`
             },
             totalMoney: {
                 key: 'totalMoney',
@@ -907,7 +988,7 @@
                 align: 'text-right',
                 headerClass: 'font-bold text-slate-800 bg-slate-100/80',
                 cellBg: 'bg-slate-50/40',
-                renderCell: (emp, idx, stats) => `<span class="font-bold text-slate-800">${formatCurrency(stats.actualMoney)}</span>`,
+                renderCell: (emp, idx, stats) => `<span class="font-normal text-slate-800">${formatCurrency(stats.actualMoney)}</span>`,
                 renderTotal: (totals) => `<span class="text-slate-900 font-bold">${formatCurrency(totals.actualMoney)}</span>`
             },
             excessMoney: {
@@ -921,11 +1002,11 @@
                 renderCell: (emp, idx, stats) => {
                     const excess = stats.excessMoney;
                     if (excess > 0) {
-                        return `<span class="font-bold text-amber-600">${formatCurrency(excess)}</span>`;
+                        return `<span class="font-normal text-amber-600">${formatCurrency(excess)}</span>`;
                     } else if (excess < 0) {
-                        return `<span class="font-bold text-rose-600">${formatCurrency(excess)}</span>`;
+                        return `<span class="font-normal text-rose-600">${formatCurrency(excess)}</span>`;
                     }
-                    return `<span class="text-slate-400 font-medium">0</span>`;
+                    return `<span class="text-slate-400 font-normal">0</span>`;
                 },
                 renderTotal: (totals) => {
                     const totalExcess = totals.excessMoney;
@@ -1130,15 +1211,6 @@
                     cell.style.left = `${leftVal}px`;
                 });
             });
-
-            const totalLeftWidth = offsets.length > 0
-                ? offsets[offsets.length - 1] + COLUMN_DEFS[state.columnOrder[state.columnOrder.length - 1]].width
-                : 0;
-            const totalLabelCell = document.getElementById('footerTotalLabelCell');
-            if (totalLabelCell) {
-                totalLabelCell.style.width = `${totalLeftWidth}px`;
-                totalLabelCell.style.minWidth = `${totalLeftWidth}px`;
-            }
         }
 
         // --- KÉO THẢ DI CHUYỂN CỘT ---
@@ -1208,13 +1280,152 @@
             });
         }
 
+        // --- BỘ LỌC & NHÓM ĐA CẤP (KỲ THANH TOÁN -> CHI NHÁNH -> NHÂN VIÊN) ---
+        function updateTableFilterOptions() {
+            const branchSel = document.getElementById('filterBranch');
+            const periodSel = document.getElementById('filterPeriod');
+            const nameInput = document.getElementById('filterNameInput');
+            const resetBtn = document.getElementById('btnResetTableFilters');
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
+
+            if (periodSel) {
+                const periods = Array.from(new Set(
+                    state.employees.map(e => (e.paymentPeriod || '').trim() || defaultPeriod)
+                )).sort((a, b) => a.localeCompare(b, 'vi'));
+
+                periodSel.innerHTML = `<option value="ALL">Tất cả kỳ thanh toán (${periods.length})</option>` +
+                    periods.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+                if (state.filters.paymentPeriod !== 'ALL' && !periods.includes(state.filters.paymentPeriod)) {
+                    state.filters.paymentPeriod = 'ALL';
+                }
+                periodSel.value = state.filters.paymentPeriod;
+            }
+
+            if (branchSel) {
+                const branches = Array.from(new Set(
+                    state.employees.map(e => (e.branch || '').trim() || 'Chưa phân chi nhánh')
+                )).sort((a, b) => a.localeCompare(b, 'vi'));
+
+                branchSel.innerHTML = `<option value="ALL">Tất cả chi nhánh (${branches.length})</option>` +
+                    branches.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+
+                if (state.filters.branch !== 'ALL' && !branches.includes(state.filters.branch)) {
+                    state.filters.branch = 'ALL';
+                }
+                branchSel.value = state.filters.branch;
+            }
+
+            if (nameInput && nameInput.value !== state.filters.nameQuery) {
+                nameInput.value = state.filters.nameQuery;
+            }
+
+            const hasActiveFilter = state.filters.branch !== 'ALL'
+                || state.filters.paymentPeriod !== 'ALL'
+                || state.filters.nameQuery.trim() !== '';
+
+            if (resetBtn) {
+                if (hasActiveFilter) resetBtn.classList.remove('hidden');
+                else resetBtn.classList.add('hidden');
+            }
+        }
+
+        function getFilteredEmployees() {
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
+            const q = (state.filters.nameQuery || '').trim().toLowerCase();
+
+            return state.employees.filter(emp => {
+                const empBranch = (emp.branch || '').trim() || 'Chưa phân chi nhánh';
+                const empPeriod = (emp.paymentPeriod || '').trim() || defaultPeriod;
+                const empName = (emp.name || '').toLowerCase();
+
+                if (state.filters.paymentPeriod !== 'ALL' && empPeriod !== state.filters.paymentPeriod) return false;
+                if (state.filters.branch !== 'ALL' && empBranch !== state.filters.branch) return false;
+                if (q && !empName.includes(q)) return false;
+                return true;
+            });
+        }
+
+        function onTableFilterChange() {
+            const branchSel = document.getElementById('filterBranch');
+            const periodSel = document.getElementById('filterPeriod');
+            const nameInput = document.getElementById('filterNameInput');
+
+            state.filters.paymentPeriod = periodSel ? periodSel.value : 'ALL';
+            state.filters.branch = branchSel ? branchSel.value : 'ALL';
+            state.filters.nameQuery = nameInput ? nameInput.value : '';
+            renderTable();
+        }
+
+        function resetTableFilters() {
+            state.filters = {
+                branch: 'ALL',
+                paymentPeriod: 'ALL',
+                nameQuery: ''
+            };
+            renderTable();
+        }
+
+        function groupEmployeesHierarchy(empList) {
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
+            const periodsMap = new Map();
+
+            empList.forEach(emp => {
+                const periodKey = (emp.paymentPeriod || '').trim() || defaultPeriod;
+                const branchKey = (emp.branch || '').trim() || 'Chưa phân chi nhánh';
+
+                if (!periodsMap.has(periodKey)) {
+                    periodsMap.set(periodKey, {
+                        paymentPeriod: periodKey,
+                        branchesMap: new Map()
+                    });
+                }
+                const periodObj = periodsMap.get(periodKey);
+                if (!periodObj.branchesMap.has(branchKey)) {
+                    periodObj.branchesMap.set(branchKey, {
+                        branch: branchKey,
+                        paymentPeriod: periodKey,
+                        employees: []
+                    });
+                }
+                periodObj.branchesMap.get(branchKey).employees.push(emp);
+            });
+
+            return Array.from(periodsMap.values())
+                .sort((a, b) => a.paymentPeriod.localeCompare(b.paymentPeriod, 'vi'))
+                .map(pGroup => {
+                    const branches = Array.from(pGroup.branchesMap.values())
+                        .sort((a, b) => a.branch.localeCompare(b.branch, 'vi'))
+                        .map(bGroup => ({
+                            ...bGroup,
+                            employees: [...bGroup.employees].sort((x, y) =>
+                                (x.name || '').localeCompare(y.name || '', 'vi')
+                            )
+                        }));
+                    return {
+                        paymentPeriod: pGroup.paymentPeriod,
+                        branches
+                    };
+                });
+        }
+
         // --- RENDER BẢNG CHẤM CÔNG ---
         function renderTable() {
+            updateTableFilterOptions();
+
             const totalDays = getDaysInMonth(state.month, state.year);
             const thead = document.getElementById('tableHeader');
             const tbody = document.getElementById('tableBody');
             const tfoot = document.getElementById('tableFooter');
             if (!thead || !tbody || !tfoot) return;
+
+            const filteredEmployees = getFilteredEmployees();
+            const summaryEl = document.getElementById('filterResultSummary');
+            if (summaryEl) {
+                summaryEl.textContent = filteredEmployees.length === state.employees.length
+                    ? `Hiển thị toàn bộ ${state.employees.length} nhân sự`
+                    : `Đang lọc: ${filteredEmployees.length} / ${state.employees.length} nhân sự`;
+            }
 
             const stickyOffsets = getStickyOffsets();
             const lastColIdx = state.columnOrder.length - 1;
@@ -1273,71 +1484,222 @@
             let grandTotalExcess = 0;
             const dailyTotals = new Array(totalDays + 1).fill(0);
 
-            state.employees.forEach((emp, idx) => {
-                let empShifts = 0;
-                for (let d = 1; d <= totalDays; d++) {
-                    if (emp.days[d] === 'x') {
-                        empShifts++;
-                        dailyTotals[d]++;
-                    }
-                }
-                const empActualMoney = empShifts * state.rate;
-                const empExcessMoney = emp.targetMoney - empActualMoney;
-                grandTotalTarget += emp.targetMoney;
-                grandTotalShifts += empShifts;
-                grandTotalActual += empActualMoney;
-                grandTotalExcess += empExcessMoney;
+            const periodHierarchy = groupEmployeesHierarchy(filteredEmployees);
+            let globalRowIdx = 0;
+            const periodLabelColIdx = state.columnOrder.includes('paymentPeriod')
+                ? state.columnOrder.indexOf('paymentPeriod')
+                : (state.columnOrder.includes('name') ? state.columnOrder.indexOf('name') : 0);
+            const branchLabelColIdx = state.columnOrder.includes('branch')
+                ? state.columnOrder.indexOf('branch')
+                : (state.columnOrder.includes('name') ? state.columnOrder.indexOf('name') : 0);
 
-                const stats = { shifts: empShifts, actualMoney: empActualMoney, excessMoney: empExcessMoney };
+            periodHierarchy.forEach((pGroup) => {
+                let periodTarget = 0;
+                let periodShifts = 0;
+                let periodActual = 0;
+                let periodExcess = 0;
+                let periodEmpCount = 0;
+                const periodDailyTotals = new Array(totalDays + 1).fill(0);
 
-                bodyHtml += `<tr class="hover:bg-blue-50/30 transition-colors group">`;
+                pGroup.branches.forEach((bGroup) => {
+                    bGroup.employees.forEach((emp) => {
+                        periodEmpCount++;
+                        let empShifts = 0;
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (emp.days[d] === 'x') {
+                                empShifts++;
+                                periodDailyTotals[d]++;
+                            }
+                        }
+                        const empActual = empShifts * state.rate;
+                        const empExcess = emp.targetMoney - empActual;
+                        periodTarget += emp.targetMoney;
+                        periodShifts += empShifts;
+                        periodActual += empActual;
+                        periodExcess += empExcess;
+                    });
+                });
 
+                const periodTotalsObj = {
+                    targetMoney: periodTarget,
+                    shifts: periodShifts,
+                    actualMoney: periodActual,
+                    excessMoney: periodExcess
+                };
+
+                // Cấp 1 (Mẹ): KỲ THANH TOÁN — bôi đậm tổng hợp toàn kỳ
+                bodyHtml += `<tr class="bg-sky-100/95 border-y-2 border-sky-300 font-bold text-xs text-sky-950">`;
                 state.columnOrder.forEach((colKey, cIdx) => {
                     const col = COLUMN_DEFS[colKey];
                     const leftOffset = stickyOffsets[cIdx];
                     const borderClass = cIdx === lastColIdx ? 'border-r-2 border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]' : 'border-r border-slate-200';
-                    const cellBg = col.cellBg || 'bg-white';
+                    let cellContent = col.renderTotal(periodTotalsObj);
+                    let cellAlignClass = col.align;
+
+                    if (cIdx === periodLabelColIdx) {
+                        cellAlignClass = 'text-left';
+                        cellContent = `
+                            <div class="flex items-center gap-1.5 text-sky-950 font-bold uppercase tracking-wide overflow-hidden" title="Kỳ thanh toán: ${escapeHtml(pGroup.paymentPeriod)}">
+                                <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-sky-700 shrink-0"></i>
+                                <span class="truncate">${escapeHtml(pGroup.paymentPeriod)}</span>
+                                <span class="text-[11px] font-semibold text-sky-700 lowercase shrink-0">(${pGroup.branches.length} CN • ${periodEmpCount} NS)</span>
+                            </div>
+                        `;
+                    }
+
                     bodyHtml += `
                         <td data-col-key="${colKey}"
                             style="left: ${leftOffset}px; width: ${col.width}px; min-width: ${col.width}px; max-width: ${col.width}px;"
-                            class="sticky z-10 ${cellBg} group-hover:bg-blue-50/40 border-b ${borderClass} px-2 py-1.5 ${col.align} overflow-hidden">
-                            ${col.renderCell(emp, idx, stats)}
+                            class="sticky z-10 bg-sky-100 ${borderClass} px-2 py-2 ${cellAlignClass} font-bold overflow-hidden">
+                            ${cellContent}
                         </td>
                     `;
                 });
 
                 for (let d = 1; d <= totalDays; d++) {
-                    const dow = new Date(state.year, state.month - 1, d).getDay();
-                    const isChecked = emp.days[d] === 'x';
-                    const weekendBg = dow === 0 ? 'bg-rose-50/40' : (dow === 6 ? 'bg-amber-50/30' : '');
-                    bodyHtml += `
-                        <td onclick="toggleDay(${emp.id}, ${d})"
-                            title="Ngày ${d}/${state.month}/${state.year} (${DAY_NAMES_VI[dow]}) - Bấm để chấm/bỏ công"
-                            class="day-cell border-b border-r border-slate-200 text-center font-bold text-sm ${weekendBg} ${isChecked ? 'checked' : 'text-transparent hover:text-slate-300'}">
-                            ${isChecked ? 'x' : '·'}
-                        </td>
-                    `;
+                    const pCount = periodDailyTotals[d];
+                    bodyHtml += `<td class="border-r border-slate-200 text-center text-[11px] py-2 font-bold ${pCount > 0 ? 'text-sky-800' : 'text-slate-300'}">${pCount || '-'}</td>`;
                 }
+                bodyHtml += `<td class="bg-sky-100/70"></td></tr>`;
 
-                bodyHtml += `
-                    <td class="border-b border-slate-200 px-2 py-1.5 text-center">
-                        <div class="inline-flex items-center gap-1">
-                            <button onclick="rerollEmployee(${emp.id})" title="Xáo trộn ngẫu nhiên lại cho người này" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
-                                <i data-lucide="dices" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteEmployee(${emp.id})" title="Xóa dòng này" class="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
+                // Cấp 2 (Con): CHI NHÁNH thuộc Kỳ thanh toán
+                pGroup.branches.forEach((group) => {
+                    let branchTarget = 0;
+                    let branchShifts = 0;
+                    let branchActual = 0;
+                    let branchExcess = 0;
+                    const branchDailyTotals = new Array(totalDays + 1).fill(0);
+
+                    group.employees.forEach((emp) => {
+                        let empShifts = 0;
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (emp.days[d] === 'x') {
+                                empShifts++;
+                                branchDailyTotals[d]++;
+                            }
+                        }
+                        const empActual = empShifts * state.rate;
+                        const empExcess = emp.targetMoney - empActual;
+                        branchTarget += emp.targetMoney;
+                        branchShifts += empShifts;
+                        branchActual += empActual;
+                        branchExcess += empExcess;
+                    });
+
+                    const branchTotalsObj = {
+                        targetMoney: branchTarget,
+                        shifts: branchShifts,
+                        actualMoney: branchActual,
+                        excessMoney: branchExcess
+                    };
+
+                    bodyHtml += `<tr class="bg-indigo-50/90 border-y border-indigo-200 font-bold text-xs text-slate-900">`;
+                    state.columnOrder.forEach((colKey, cIdx) => {
+                        const col = COLUMN_DEFS[colKey];
+                        const leftOffset = stickyOffsets[cIdx];
+                        const borderClass = cIdx === lastColIdx ? 'border-r-2 border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]' : 'border-r border-slate-200';
+                        let cellContent = col.renderTotal(branchTotalsObj);
+                        let cellAlignClass = col.align;
+
+                        if (cIdx === branchLabelColIdx) {
+                            cellAlignClass = 'text-left';
+                            cellContent = `
+                                <div class="flex items-center gap-1.5 pl-2 text-indigo-950 font-bold uppercase tracking-wide overflow-hidden" title="Chi nhánh: ${escapeHtml(group.branch)}">
+                                    <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+                                    <span class="truncate">${escapeHtml(group.branch)}</span>
+                                    <span class="text-[11px] font-semibold text-indigo-600 lowercase shrink-0">(${group.employees.length})</span>
+                                </div>
+                            `;
+                        }
+
+                        bodyHtml += `
+                            <td data-col-key="${colKey}"
+                                style="left: ${leftOffset}px; width: ${col.width}px; min-width: ${col.width}px; max-width: ${col.width}px;"
+                                class="sticky z-10 bg-indigo-50 ${borderClass} px-2 py-2 ${cellAlignClass} font-bold overflow-hidden">
+                                ${cellContent}
+                            </td>
+                        `;
+                    });
+
+                    for (let d = 1; d <= totalDays; d++) {
+                        const bCount = branchDailyTotals[d];
+                        bodyHtml += `<td class="border-r border-slate-200 text-center text-[11px] py-2 font-bold ${bCount > 0 ? 'text-indigo-700' : 'text-slate-300'}">${bCount || '-'}</td>`;
+                    }
+                    bodyHtml += `<td class="bg-indigo-50/60"></td></tr>`;
+
+                    // Cấp 3: Các dòng chi tiết nhân sự (không bôi đậm)
+                    group.employees.forEach((emp) => {
+                        const idx = globalRowIdx++;
+                        let empShifts = 0;
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (emp.days[d] === 'x') {
+                                empShifts++;
+                                dailyTotals[d]++;
+                            }
+                        }
+                        const empActualMoney = empShifts * state.rate;
+                        const empExcessMoney = emp.targetMoney - empActualMoney;
+
+                        grandTotalTarget += emp.targetMoney;
+                        grandTotalShifts += empShifts;
+                        grandTotalActual += empActualMoney;
+                        grandTotalExcess += empExcessMoney;
+
+                        const stats = { shifts: empShifts, actualMoney: empActualMoney, excessMoney: empExcessMoney };
+
+                        bodyHtml += `<tr class="hover:bg-blue-50/30 transition-colors group font-normal">`;
+
+                        state.columnOrder.forEach((colKey, cIdx) => {
+                            const col = COLUMN_DEFS[colKey];
+                            const leftOffset = stickyOffsets[cIdx];
+                            const borderClass = cIdx === lastColIdx ? 'border-r-2 border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]' : 'border-r border-slate-200';
+                            const cellBg = col.cellBg || 'bg-white';
+                            bodyHtml += `
+                                <td data-col-key="${colKey}"
+                                    style="left: ${leftOffset}px; width: ${col.width}px; min-width: ${col.width}px; max-width: ${col.width}px;"
+                                    class="sticky z-10 ${cellBg} group-hover:bg-blue-50/40 border-b ${borderClass} px-2 py-1.5 ${col.align} font-normal overflow-hidden">
+                                    ${col.renderCell(emp, idx, stats)}
+                                </td>
+                            `;
+                        });
+
+                        for (let d = 1; d <= totalDays; d++) {
+                            const dow = new Date(state.year, state.month - 1, d).getDay();
+                            const isChecked = emp.days[d] === 'x';
+                            const weekendBg = dow === 0 ? 'bg-rose-50/40' : (dow === 6 ? 'bg-amber-50/30' : '');
+                            bodyHtml += `
+                                <td onclick="toggleDay(${emp.id}, ${d})"
+                                    title="Ngày ${d}/${state.month}/${state.year} (${DAY_NAMES_VI[dow]}) - Bấm để chấm/bỏ công"
+                                    class="day-cell border-b border-r border-slate-200 text-center font-normal text-sm ${weekendBg} ${isChecked ? 'checked' : 'text-transparent hover:text-slate-300'}">
+                                    ${isChecked ? 'x' : '·'}
+                                </td>
+                            `;
+                        }
+
+                        bodyHtml += `
+                            <td class="border-b border-slate-200 px-2 py-1.5 text-center font-normal">
+                                <div class="inline-flex items-center gap-1">
+                                    <button onclick="rerollEmployee(${emp.id})" title="Xáo trộn ngẫu nhiên lại cho người này" class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
+                                        <i data-lucide="dices" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteEmployee(${emp.id})" title="Xóa dòng này" class="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    });
+                });
             });
 
-            if (state.employees.length === 0) {
+            if (filteredEmployees.length === 0) {
+                const emptyMsg = state.employees.length === 0
+                    ? `Chưa có dữ liệu nhân sự. Hãy bấm <strong>"Thêm Nhân Sự"</strong> hoặc <strong>"Import Excel"</strong> để bắt đầu.`
+                    : `Không tìm thấy nhân sự nào khớp với điều kiện lọc hiện tại. <button onclick="resetTableFilters()" class="text-blue-600 underline font-semibold ml-1 cursor-pointer">Xóa bộ lọc</button>`;
                 bodyHtml = `
                     <tr>
                         <td colspan="${totalDays + state.columnOrder.length + 1}" class="py-10 text-center text-slate-400">
-                            Chưa có dữ liệu nhân sự. Hãy bấm <strong>"Thêm Nhân Sự"</strong> hoặc <strong>"Import Excel"</strong> để bắt đầu.
+                            ${emptyMsg}
                         </td>
                     </tr>
                 `;
@@ -1381,7 +1743,7 @@
             const statEmp = document.getElementById('statTotalEmployees');
             const statShifts = document.getElementById('statTotalShifts');
             const statMoney = document.getElementById('statTotalMoney');
-            if (statEmp) statEmp.textContent = state.employees.length;
+            if (statEmp) statEmp.textContent = filteredEmployees.length;
             if (statShifts) statShifts.textContent = grandTotalShifts;
             if (statMoney) statMoney.textContent = formatCurrency(grandTotalActual) + ' đ';
 
@@ -1414,7 +1776,8 @@
             const newEmp = {
                 id: nextId,
                 name: `Giáo viên mới ${nextId}`,
-                branch: "Sao Việt Tân Uyên",
+                branch: state.filters.branch !== 'ALL' ? state.filters.branch : "Sao Việt Tân Uyên",
+                paymentPeriod: state.filters.paymentPeriod !== 'ALL' ? state.filters.paymentPeriod : getDefaultPaymentPeriod(state.month, state.year),
                 targetMoney: 2500000,
                 days: {}
             };
@@ -1436,6 +1799,7 @@
             const emp = state.employees.find(e => e.id === id);
             if (emp) {
                 emp.name = newName.trim() || "Chưa đặt tên";
+                renderTable();
                 scheduleAutoSave();
             }
         }
@@ -1444,6 +1808,16 @@
             const emp = state.employees.find(e => e.id === id);
             if (emp) {
                 emp.branch = newBranch.trim();
+                renderTable();
+                scheduleAutoSave();
+            }
+        }
+
+        function updateEmpPaymentPeriod(id, newPeriod) {
+            const emp = state.employees.find(e => e.id === id);
+            if (emp) {
+                emp.paymentPeriod = newPeriod.trim() || getDefaultPaymentPeriod(state.month, state.year);
+                renderTable();
                 scheduleAutoSave();
             }
         }
@@ -1785,12 +2159,14 @@
                 state.employees = [];
             }
 
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
             let nextId = state.employees.length > 0 ? Math.max(...state.employees.map(emp => emp.id)) + 1 : 1;
             importedList.forEach(item => {
                 const emp = {
                     id: nextId++,
                     name: item.name,
                     branch: item.branch || "",
+                    paymentPeriod: item.paymentPeriod || defaultPeriod,
                     targetMoney: item.money,
                     days: {}
                 };
@@ -1805,27 +2181,38 @@
             return true;
         }
 
+        const BANK_KEYWORDS = [
+            'ngân hàng', 'ngan hang', 'bank', 'stk', 'số tài khoản', 'so tai khoan',
+            'tài khoản', 'tai khoan', 'pgd', 'phòng giao dịch', 'phong giao dich',
+            'chủ tài khoản', 'chu tai khoan', 'vietcombank', 'vcb', 'agribank',
+            'bidv', 'vietinbank', 'techcombank', 'tcb', 'mb bank', 'mbbank', 'acb',
+            'sacombank', 'vpbank', 'tpbank', 'hdbank', 'vib', 'shb', 'ocb', 'msb',
+            'eximbank', 'seabank', 'nam a', 'bắc á', 'liên việt', 'lpbank'
+        ];
+
+        const WORK_BRANCH_VALUE_KEYWORDS = [
+            'sao việt', 'sao viet', 'tân uyên', 'tan uyen', 'biên hòa', 'bien hoa',
+            'thủ dầu một', 'thu dau mot', 'dĩ an', 'di an', 'thuận an', 'thuan an',
+            'bến cát', 'ben cat', 'bàu bàng', 'bau bang', 'trảng bom', 'trang bom',
+            'long thành', 'long thanh', 'nhơn trạch', 'nhon trach', 'cơ sở', 'co so',
+            'chi nhánh', 'cn ', 'cn-', 'cs ', 'cs-', 'quận', 'tp.', 'tp '
+        ];
+
         function isBankRelatedHeader(headerText) {
-            const txt = String(headerText || '').toLowerCase().trim();
-            return (
-                txt.includes('ngân hàng') ||
-                txt.includes('bank') ||
-                txt.includes('stk') ||
-                txt.includes('số tài khoản') ||
-                txt.includes('tài khoản') ||
-                txt.includes('chủ tài khoản') ||
-                txt.includes('pgd') ||
-                txt.includes('phòng giao dịch')
-            );
+            const lower = String(headerText || '').toLowerCase().trim();
+            return BANK_KEYWORDS.some(kw => lower.includes(kw));
         }
 
-        function isBankRelatedValue(cellVal) {
-            const txt = String(cellVal || '').toLowerCase().trim();
-            return (
-                /\b(vietcombank|vcb|techcombank|tcb|bidv|agribank|vietinbank|mb\s*bank|mbbank|acb|sacombank|vpbank|tpbank|hdbank|vib|ocb|msb|shb|eximbank|seabank|abbank|nam\s*a|bắc\s*á|liên\s*việt|lpbank|pgbank|kienlongbank|vietbank)\b/i.test(txt) ||
-                txt.includes('ngân hàng') ||
-                txt.includes('pgd ')
-            );
+        function isBankCellValue(cellText) {
+            const lower = String(cellText || '').toLowerCase().trim();
+            if (!lower) return false;
+            return BANK_KEYWORDS.some(kw => lower.includes(kw));
+        }
+
+        function isWorkBranchCellValue(cellText) {
+            const lower = String(cellText || '').toLowerCase().trim();
+            if (!lower || isBankCellValue(lower)) return false;
+            return WORK_BRANCH_VALUE_KEYWORDS.some(kw => lower.includes(kw));
         }
 
         function extractEmployeesFromRows(rows) {
@@ -1834,50 +2221,99 @@
 
             let nameColIdx = -1;
             let branchColIdx = -1;
+            let periodColIdx = -1;
             let moneyColIdx = -1;
             let startRow = 0;
-            const bankColIndices = new Set();
+            let headerRowIdx = -1;
+            const branchCandidates = [];
 
             for (let r = 0; r < Math.min(rows.length, 6); r++) {
                 const row = rows[r] || [];
+                let foundInRow = false;
                 row.forEach((cell, idx) => {
                     const txt = String(cell || '').toLowerCase().trim();
                     if (!txt) return;
 
-                    // Đánh dấu các cột liên quan đến ngân hàng (VD: "Chi nhánh ngân hàng", "Ngân hàng", "STK") để bỏ qua
-                    if (isBankRelatedHeader(txt)) {
-                        bankColIndices.add(idx);
-                        return;
-                    }
-
-                    if (txt.includes('họ') || txt.includes('tên') || txt.includes('giáo viên') || txt.includes('nhân viên') || txt.includes('name')) {
+                    if (!isBankRelatedHeader(txt) && (txt.includes('họ') || txt.includes('tên') || txt.includes('giáo viên') || txt.includes('nhân viên') || txt.includes('name'))) {
                         nameColIdx = idx;
+                        foundInRow = true;
                     }
-                    if (
-                        txt.includes('chi nhánh làm việc') ||
-                        txt.includes('chi nhánh công tác') ||
-                        txt.includes('đơn vị công tác') ||
-                        txt === 'chi nhánh' ||
-                        txt === 'cơ sở' ||
-                        txt.includes('chi nhánh') ||
-                        txt.includes('cơ sở') ||
-                        txt.includes('branch') ||
-                        txt.includes('địa điểm')
-                    ) {
-                        // Ưu tiên cột "chi nhánh làm việc / cơ sở" nếu chưa chọn hoặc nếu cột trước đó chung chung hơn
-                        if (branchColIdx === -1 || txt.includes('làm việc') || txt.includes('cơ sở')) {
-                            branchColIdx = idx;
-                        }
+                    if (!isBankRelatedHeader(txt) && (
+                        txt.includes('chi nhánh') || txt.includes('cơ sở') || txt.includes('nơi làm việc') ||
+                        txt.includes('đơn vị') || txt.includes('branch') || txt.includes('địa điểm') || txt.includes('khu vực')
+                    )) {
+                        const isSpecificWorkBranch = txt.includes('làm việc') || txt.includes('cơ sở') || txt.includes('nơi') || txt.includes('khu vực');
+                        branchCandidates.push({ idx, isSpecificWorkBranch });
+                        foundInRow = true;
+                    }
+                    if (txt.includes('kỳ thanh toán') || txt.includes('ky thanh toan') || txt.includes('kỳ lương') || txt.includes('đợt thanh toán') || txt === 'kỳ' || txt === 'tháng') {
+                        periodColIdx = idx;
+                        foundInRow = true;
                     }
                     if (txt.includes('tiền') || txt.includes('lương') || txt.includes('tổng') || txt.includes('thành tiền') || txt.includes('amount') || txt.includes('money')) {
                         moneyColIdx = idx;
+                        foundInRow = true;
                     }
                 });
-                if (nameColIdx !== -1 || moneyColIdx !== -1) {
+                if (foundInRow && (nameColIdx !== -1 || moneyColIdx !== -1)) {
+                    headerRowIdx = r;
                     startRow = r + 1;
                     break;
                 }
             }
+
+            if (branchCandidates.length > 0) {
+                let bestCol = branchCandidates[0].idx;
+                let bestScore = -999;
+
+                branchCandidates.forEach(cand => {
+                    let score = cand.isSpecificWorkBranch ? 10 : 0;
+                    for (let r = startRow; r < Math.min(rows.length, startRow + 15); r++) {
+                        const val = String((rows[r] || [])[cand.idx] || '').trim();
+                        if (!val) continue;
+                        if (isBankCellValue(val)) score -= 8;
+                        if (isWorkBranchCellValue(val)) score += 6;
+                    }
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCol = cand.idx;
+                    }
+                });
+
+                if (bestScore >= 0) {
+                    branchColIdx = bestCol;
+                }
+            }
+
+            if (branchColIdx === -1 && rows.length > startRow) {
+                const maxCols = Math.max(...rows.slice(startRow, startRow + 15).map(r => (r || []).length));
+                let bestInferredCol = -1;
+                let bestWorkHits = 0;
+
+                for (let c = 0; c < maxCols; c++) {
+                    if (c === nameColIdx || c === moneyColIdx || c === periodColIdx) continue;
+                    const headerVal = headerRowIdx !== -1 ? String((rows[headerRowIdx] || [])[c] || '') : '';
+                    if (isBankRelatedHeader(headerVal)) continue;
+
+                    let workHits = 0;
+                    let bankHits = 0;
+                    for (let r = startRow; r < Math.min(rows.length, startRow + 15); r++) {
+                        const val = String((rows[r] || [])[c] || '').trim();
+                        if (!val) continue;
+                        if (isBankCellValue(val)) bankHits++;
+                        else if (isWorkBranchCellValue(val)) workHits++;
+                    }
+                    if (bankHits === 0 && workHits > bestWorkHits) {
+                        bestWorkHits = workHits;
+                        bestInferredCol = c;
+                    }
+                }
+                if (bestInferredCol !== -1) {
+                    branchColIdx = bestInferredCol;
+                }
+            }
+
+            const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
 
             for (let i = startRow; i < rows.length; i++) {
                 const row = rows[i];
@@ -1888,41 +2324,47 @@
 
                 let name = "";
                 let branch = "";
+                let paymentPeriod = "";
                 let money = 0;
 
                 if (nameColIdx !== -1 && moneyColIdx !== -1) {
                     name = String(row[nameColIdx] || '').trim();
-                    if (branchColIdx !== -1 && !bankColIndices.has(branchColIdx)) {
+                    if (branchColIdx !== -1) {
                         const rawBranch = String(row[branchColIdx] || '').trim();
-                        branch = isBankRelatedValue(rawBranch) ? '' : rawBranch;
+                        branch = isBankCellValue(rawBranch) ? '' : rawBranch;
+                    }
+                    if (periodColIdx !== -1) {
+                        paymentPeriod = String(row[periodColIdx] || '').trim();
                     }
                     money = parseCurrency(row[moneyColIdx]);
                 } else {
-                    let textCells = [];
-                    row.forEach((cell, idx) => {
-                        if (bankColIndices.has(idx)) return;
+                    let nonBankTexts = [];
+                    row.forEach((cell) => {
                         const rawStr = String(cell ?? '').trim();
                         if (!rawStr) return;
 
                         if (typeof cell === 'number') {
                             if (cell >= 10000) money = Math.round(cell);
                         } else if (/[a-zA-ZÀ-ỹ]/.test(rawStr)) {
-                            textCells.push(rawStr);
+                            if (!isBankCellValue(rawStr)) {
+                                nonBankTexts.push(rawStr);
+                            }
                         } else {
                             const numVal = parseCurrency(rawStr);
                             if (numVal >= 10000) money = numVal;
                         }
                     });
-                    if (textCells.length > 0) name = textCells[0];
-                    if (textCells.length > 1) {
-                        // Tìm ô văn bản chi nhánh làm việc (ưu tiên từ khóa cơ sở/trung tâm hoặc bỏ qua tên ngân hàng)
-                        const workBranchCandidate = textCells.slice(1).find(val => !isBankRelatedValue(val));
-                        branch = workBranchCandidate || '';
+                    if (nonBankTexts.length > 0) name = nonBankTexts[0];
+                    const detectedBranch = nonBankTexts.slice(1).find(t => isWorkBranchCellValue(t));
+                    if (detectedBranch) {
+                        branch = detectedBranch;
+                    } else if (nonBankTexts.length > 1) {
+                        branch = nonBankTexts[1];
                     }
                 }
 
                 if (name && money > 0) {
-                    parsed.push({ name, branch, money });
+                    parsed.push({ name, branch, paymentPeriod: paymentPeriod || defaultPeriod, money });
                 }
             }
 
@@ -1972,7 +2414,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // --- MODAL IMPORT (EXCEL / GOOGLE SHEET / PASTE) ---
+        // --- MODAL IMPORT (EXCEL / PASTE) ---
         function openBulkModal(defaultTab = 'excel-file') {
             const modal = document.getElementById('bulkModal');
             if (!modal) return;
@@ -2076,7 +2518,8 @@
             const excelColMeta = {
                 stt: { header: 'STT', width: 5, align: 'center' },
                 name: { header: 'Họ và tên', width: 24, align: 'left' },
-                branch: { header: 'Chi nhánh', width: 15, align: 'left' },
+                branch: { header: 'Chi nhánh', width: 18, align: 'left' },
+                paymentPeriod: { header: 'Kỳ thanh toán', width: 15, align: 'left' },
                 targetMoney: { header: 'Số tiền mục tiêu', width: 15, align: 'right', isMoney: true },
                 totalShifts: { header: 'Tổng công', width: 9, align: 'center' },
                 totalMoney: { header: 'Thành tiền', width: 15, align: 'right', isMoney: true },
@@ -2131,67 +2574,202 @@
             let grandExcess = 0;
             const dailyTotals = new Array(totalDays + 1).fill(0);
 
-            state.employees.forEach((emp, idx) => {
-                const rowIdx = 6 + idx;
-                const row = worksheet.getRow(rowIdx);
-                row.height = 20;
+            const filteredEmployeesForExport = getFilteredEmployees();
+            const periodHierarchyExport = groupEmployeesHierarchy(filteredEmployeesForExport);
+            let currentExcelRow = 6;
+            let globalEmpIdx = 0;
+            const excelPeriodColIdx = state.columnOrder.includes('paymentPeriod')
+                ? state.columnOrder.indexOf('paymentPeriod')
+                : (state.columnOrder.includes('name') ? state.columnOrder.indexOf('name') : 0);
+            const excelBranchColIdx = state.columnOrder.includes('branch')
+                ? state.columnOrder.indexOf('branch')
+                : (state.columnOrder.includes('name') ? state.columnOrder.indexOf('name') : 0);
 
-                let shifts = 0;
-                for (let d = 1; d <= totalDays; d++) {
-                    if (emp.days[d] === 'x') {
-                        shifts++;
-                        dailyTotals[d]++;
-                    }
-                }
-                const money = shifts * state.rate;
-                const excess = emp.targetMoney - money;
-                grandTarget += emp.targetMoney;
-                grandShifts += shifts;
-                grandMoney += money;
-                grandExcess += excess;
+            periodHierarchyExport.forEach((pGroup) => {
+                let periodTarget = 0;
+                let periodShifts = 0;
+                let periodMoney = 0;
+                let periodExcess = 0;
+                let periodEmpCount = 0;
+                const periodDailyTotals = new Array(totalDays + 1).fill(0);
+
+                pGroup.branches.forEach((bGroup) => {
+                    bGroup.employees.forEach((emp) => {
+                        periodEmpCount++;
+                        let shifts = 0;
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (emp.days[d] === 'x') {
+                                shifts++;
+                                periodDailyTotals[d]++;
+                            }
+                        }
+                        const money = shifts * state.rate;
+                        const excess = emp.targetMoney - money;
+                        periodTarget += emp.targetMoney;
+                        periodShifts += shifts;
+                        periodMoney += money;
+                        periodExcess += excess;
+                    });
+                });
+
+                // Dòng Cấp 1 (Mẹ): KỲ THANH TOÁN (bôi đậm)
+                const periodRow = worksheet.getRow(currentExcelRow++);
+                periodRow.height = 22;
 
                 state.columnOrder.forEach((colKey, cIdx) => {
                     const colNum = cIdx + 1;
                     const meta = excelColMeta[colKey];
-                    const cell = row.getCell(colNum);
+                    const cell = periodRow.getCell(colNum);
 
-                    if (colKey === 'stt') cell.value = idx + 1;
-                    else if (colKey === 'name') cell.value = emp.name;
-                    else if (colKey === 'branch') cell.value = emp.branch || '';
-                    else if (colKey === 'targetMoney') cell.value = emp.targetMoney;
-                    else if (colKey === 'totalShifts') cell.value = shifts;
-                    else if (colKey === 'totalMoney') cell.value = money;
-                    else if (colKey === 'excessMoney') cell.value = excess;
+                    if (cIdx === excelPeriodColIdx) cell.value = `${pGroup.paymentPeriod.toUpperCase()} (${periodEmpCount})`;
+                    else if (colKey === 'targetMoney') cell.value = periodTarget;
+                    else if (colKey === 'totalShifts') cell.value = periodShifts;
+                    else if (colKey === 'totalMoney') cell.value = periodMoney;
+                    else if (colKey === 'excessMoney') cell.value = periodExcess;
+                    else cell.value = '';
 
-                    cell.font = {
-                        ...fontMain,
-                        bold: colKey === 'totalShifts' || colKey === 'totalMoney',
-                        color: { argb: colKey === 'excessMoney' && excess > 0 ? 'FFB45309' : 'FF0F172A' }
-                    };
-                    cell.alignment = { horizontal: meta.align, vertical: 'middle' };
+                    cell.font = { ...fontMain, bold: true, color: { argb: 'FF0C4A6E' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+                    cell.alignment = { horizontal: cIdx === excelPeriodColIdx ? 'left' : meta.align, vertical: 'middle' };
                     if (meta.isMoney) cell.numFmt = '#,##0';
                     cell.border = thinBorder;
                 });
 
                 for (let d = 1; d <= totalDays; d++) {
                     const colNum = state.columnOrder.length + d;
-                    const dow = new Date(state.year, state.month - 1, d).getDay();
-                    const isChecked = emp.days[d] === 'x';
-                    const cell = row.getCell(colNum);
-
-                    cell.value = isChecked ? 'x' : '';
-                    cell.font = { ...fontMain, bold: true, color: { argb: 'FF1D4ED8' } };
+                    const cell = periodRow.getCell(colNum);
+                    const pCount = periodDailyTotals[d];
+                    cell.value = pCount > 0 ? pCount : '';
+                    cell.font = { ...fontMain, size: 8, bold: true, color: { argb: 'FF0369A1' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
                     cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                    if (dow === 0) {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF1F2' } };
-                    } else if (dow === 6) {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
-                    }
                     cell.border = thinBorder;
                 }
+
+                // Các nhóm Cấp 2 (Con): CHI NHÁNH thuộc Kỳ thanh toán
+                pGroup.branches.forEach((group) => {
+                    let branchTarget = 0;
+                    let branchShifts = 0;
+                    let branchMoney = 0;
+                    let branchExcess = 0;
+                    const branchDailyTotals = new Array(totalDays + 1).fill(0);
+
+                    group.employees.forEach((emp) => {
+                        let shifts = 0;
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (emp.days[d] === 'x') {
+                                shifts++;
+                                branchDailyTotals[d]++;
+                            }
+                        }
+                        const money = shifts * state.rate;
+                        const excess = emp.targetMoney - money;
+                        branchTarget += emp.targetMoney;
+                        branchShifts += shifts;
+                        branchMoney += money;
+                        branchExcess += excess;
+                    });
+
+                    const grpHeaderRow = worksheet.getRow(currentExcelRow++);
+                    grpHeaderRow.height = 21;
+
+                    state.columnOrder.forEach((colKey, cIdx) => {
+                        const colNum = cIdx + 1;
+                        const meta = excelColMeta[colKey];
+                        const cell = grpHeaderRow.getCell(colNum);
+
+                        if (cIdx === excelBranchColIdx) cell.value = `↳ ${group.branch.toUpperCase()} (${group.employees.length})`;
+                        else if (colKey === 'targetMoney') cell.value = branchTarget;
+                        else if (colKey === 'totalShifts') cell.value = branchShifts;
+                        else if (colKey === 'totalMoney') cell.value = branchMoney;
+                        else if (colKey === 'excessMoney') cell.value = branchExcess;
+                        else cell.value = '';
+
+                        cell.font = { ...fontMain, bold: true, color: { argb: 'FF1E1B4B' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
+                        cell.alignment = { horizontal: cIdx === excelBranchColIdx ? 'left' : meta.align, vertical: 'middle' };
+                        if (meta.isMoney) cell.numFmt = '#,##0';
+                        cell.border = thinBorder;
+                    });
+
+                    for (let d = 1; d <= totalDays; d++) {
+                        const colNum = state.columnOrder.length + d;
+                        const cell = grpHeaderRow.getCell(colNum);
+                        const bCount = branchDailyTotals[d];
+                        cell.value = bCount > 0 ? bCount : '';
+                        cell.font = { ...fontMain, size: 8, bold: true, color: { argb: 'FF3730A3' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        cell.border = thinBorder;
+                    }
+
+                    // Cấp 3: Các dòng chi tiết nhân sự (không bôi đậm)
+                    group.employees.forEach((emp) => {
+                        const idx = globalEmpIdx++;
+                        const row = worksheet.getRow(currentExcelRow++);
+                        row.height = 20;
+
+                        let shifts = 0;
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (emp.days[d] === 'x') {
+                                shifts++;
+                                dailyTotals[d]++;
+                            }
+                        }
+                        const money = shifts * state.rate;
+                        const excess = emp.targetMoney - money;
+
+                        grandTarget += emp.targetMoney;
+                        grandShifts += shifts;
+                        grandMoney += money;
+                        grandExcess += excess;
+
+                        state.columnOrder.forEach((colKey, cIdx) => {
+                            const colNum = cIdx + 1;
+                            const meta = excelColMeta[colKey];
+                            const cell = row.getCell(colNum);
+
+                            if (colKey === 'stt') cell.value = idx + 1;
+                            else if (colKey === 'name') cell.value = emp.name;
+                            else if (colKey === 'branch') cell.value = emp.branch || '';
+                            else if (colKey === 'paymentPeriod') cell.value = emp.paymentPeriod || getDefaultPaymentPeriod(state.month, state.year);
+                            else if (colKey === 'targetMoney') cell.value = emp.targetMoney;
+                            else if (colKey === 'totalShifts') cell.value = shifts;
+                            else if (colKey === 'totalMoney') cell.value = money;
+                            else if (colKey === 'excessMoney') cell.value = excess;
+
+                            cell.font = {
+                                ...fontMain,
+                                bold: false,
+                                color: { argb: colKey === 'excessMoney' && excess > 0 ? 'FFB45309' : 'FF0F172A' }
+                            };
+                            cell.alignment = { horizontal: meta.align, vertical: 'middle' };
+                            if (meta.isMoney) cell.numFmt = '#,##0';
+                            cell.border = thinBorder;
+                        });
+
+                        for (let d = 1; d <= totalDays; d++) {
+                            const colNum = state.columnOrder.length + d;
+                            const dow = new Date(state.year, state.month - 1, d).getDay();
+                            const isChecked = emp.days[d] === 'x';
+                            const cell = row.getCell(colNum);
+
+                            cell.value = isChecked ? 'x' : '';
+                            cell.font = { ...fontMain, bold: false, color: { argb: 'FF1D4ED8' } };
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            if (dow === 0) {
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF1F2' } };
+                            } else if (dow === 6) {
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
+                            }
+                            cell.border = thinBorder;
+                        }
+                    });
+                });
             });
 
-            const totalRowIdx = 6 + state.employees.length;
+            // Dòng Tổng Cộng cuối bảng
+            const totalRowIdx = currentExcelRow;
             const totalRow = worksheet.getRow(totalRowIdx);
             totalRow.height = 22;
 
@@ -2225,6 +2803,7 @@
                 cell.border = thinBorder;
             }
 
+            // Khu vực ký xác nhận cuối trang in
             const signStartRow = totalRowIdx + 2;
             worksheet.getRow(signStartRow).height = 18;
             worksheet.getRow(signStartRow + 1).height = 16;
@@ -2433,11 +3012,13 @@
 
                     for (const key of incomingKeys) {
                         const rawSheet = parsed.sheets[key];
+                        const sheetDefaultPeriod = getDefaultPaymentPeriod(Number(rawSheet.month) || 8, Number(rawSheet.year) || 2026);
                         const empList = Array.isArray(rawSheet.employees)
                             ? rawSheet.employees.map((emp, idx) => ({
                                 id: emp.id || idx + 1,
                                 name: emp.name || 'Chưa đặt tên',
                                 branch: emp.branch || '',
+                                paymentPeriod: emp.paymentPeriod || sheetDefaultPeriod,
                                 targetMoney: Number(emp.targetMoney) || 0,
                                 days: emp.days || {}
                             }))
@@ -2519,6 +3100,7 @@
         window.openReportModal = openReportModal;
         window.closeReportModal = closeReportModal;
         window.setReportScope = setReportScope;
+        window.onReportFilterChange = onReportFilterChange;
         window.renderReportContent = renderReportContent;
         window.exportSummaryReportExcel = exportSummaryReportExcel;
         window.randomizeAll = randomizeAll;
@@ -2527,7 +3109,10 @@
         window.deleteEmployee = deleteEmployee;
         window.updateEmpName = updateEmpName;
         window.updateEmpBranch = updateEmpBranch;
+        window.updateEmpPaymentPeriod = updateEmpPaymentPeriod;
         window.updateEmpMoney = updateEmpMoney;
+        window.onTableFilterChange = onTableFilterChange;
+        window.resetTableFilters = resetTableFilters;
         window.toggleDay = toggleDay;
         window.openBulkModal = openBulkModal;
         window.closeBulkModal = closeBulkModal;
@@ -2579,7 +3164,12 @@
                 }
             }
 
-            populateBranchFilterOptions();
+            populateReportFilterOptions();
+            renderReportContent();
+        }
+
+        function onReportFilterChange() {
+            populateReportFilterOptions();
             renderReportContent();
         }
 
@@ -2612,6 +3202,7 @@
             sheetsToProcess.forEach(sheet => {
                 const totalDays = getDaysInMonth(sheet.month, sheet.year);
                 const rate = sheet.rate || 250000;
+                const defaultPeriod = getDefaultPaymentPeriod(sheet.month, sheet.year);
                 (sheet.employees || []).forEach(emp => {
                     let shifts = 0;
                     for (let d = 1; d <= totalDays; d++) {
@@ -2621,9 +3212,11 @@
                     const targetMoney = Number(emp.targetMoney) || 0;
                     const excessMoney = targetMoney - actualMoney;
                     const branchName = (emp.branch || '').trim() || 'Chưa phân chi nhánh';
+                    const periodName = (emp.paymentPeriod || '').trim() || defaultPeriod;
 
                     records.push({
                         monthLabel: `T${String(sheet.month).padStart(2, '0')}/${sheet.year}`,
+                        paymentPeriod: periodName,
                         branch: branchName,
                         name: (emp.name || '').trim() || 'Chưa đặt tên',
                         targetMoney,
@@ -2637,28 +3230,49 @@
             return records;
         }
 
-        function populateBranchFilterOptions() {
-            const selectEl = document.getElementById('reportBranchFilter');
-            if (!selectEl) return;
-            const prevVal = selectEl.value;
-            const records = collectReportRecords();
-            const branches = Array.from(new Set(records.map(r => r.branch))).sort((a, b) => a.localeCompare(b, 'vi'));
+        function populateReportFilterOptions() {
+            const periodSelectEl = document.getElementById('reportPeriodFilter');
+            const branchSelectEl = document.getElementById('reportBranchFilter');
+            if (!periodSelectEl || !branchSelectEl) return;
 
-            selectEl.innerHTML = `<option value="ALL">Tất cả chi nhánh (${branches.length})</option>` +
+            const prevPeriod = periodSelectEl.value || 'ALL';
+            const prevBranch = branchSelectEl.value || 'ALL';
+            const allRecords = collectReportRecords();
+
+            // 1. Danh sách Kỳ thanh toán (Mẹ)
+            const periods = Array.from(new Set(allRecords.map(r => r.paymentPeriod))).sort((a, b) => a.localeCompare(b, 'vi'));
+            periodSelectEl.innerHTML = `<option value="ALL">Tất cả kỳ thanh toán (${periods.length})</option>` +
+                periods.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+            const activePeriod = periods.includes(prevPeriod) ? prevPeriod : 'ALL';
+            periodSelectEl.value = activePeriod;
+
+            // 2. Danh sách Chi nhánh (Con - lọc theo Kỳ thanh toán nếu đang chọn kỳ cụ thể)
+            const scopedRecordsForBranch = activePeriod !== 'ALL'
+                ? allRecords.filter(r => r.paymentPeriod === activePeriod)
+                : allRecords;
+            const branches = Array.from(new Set(scopedRecordsForBranch.map(r => r.branch))).sort((a, b) => a.localeCompare(b, 'vi'));
+
+            branchSelectEl.innerHTML = `<option value="ALL">Tất cả chi nhánh (${branches.length})</option>` +
                 branches.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
 
-            if (branches.includes(prevVal)) {
-                selectEl.value = prevVal;
+            if (branches.includes(prevBranch)) {
+                branchSelectEl.value = prevBranch;
             } else {
-                selectEl.value = 'ALL';
+                branchSelectEl.value = 'ALL';
             }
         }
 
         function buildAggregatedReportData() {
+            const periodFilterEl = document.getElementById('reportPeriodFilter');
             const branchFilterEl = document.getElementById('reportBranchFilter');
+            const selectedPeriod = periodFilterEl ? periodFilterEl.value : 'ALL';
             const selectedBranch = branchFilterEl ? branchFilterEl.value : 'ALL';
             let records = collectReportRecords();
 
+            if (selectedPeriod !== 'ALL') {
+                records = records.filter(r => r.paymentPeriod === selectedPeriod);
+            }
             if (selectedBranch !== 'ALL') {
                 records = records.filter(r => r.branch === selectedBranch);
             }
@@ -2688,6 +3302,7 @@
                         branch: rec.branch,
                         monthsCount: 0,
                         monthsList: [],
+                        periodsList: [],
                         targetMoney: 0,
                         shifts: 0,
                         actualMoney: 0,
@@ -2696,7 +3311,8 @@
                 }
                 const eAgg = bGroup.empMap.get(empKey);
                 eAgg.monthsCount += 1;
-                eAgg.monthsList.push(rec.monthLabel);
+                if (!eAgg.monthsList.includes(rec.monthLabel)) eAgg.monthsList.push(rec.monthLabel);
+                if (!eAgg.periodsList.includes(rec.paymentPeriod)) eAgg.periodsList.push(rec.paymentPeriod);
                 eAgg.targetMoney += rec.targetMoney;
                 eAgg.shifts += rec.shifts;
                 eAgg.actualMoney += rec.actualMoney;
@@ -2720,7 +3336,7 @@
                 return acc;
             }, { branches: 0, employees: 0, targetMoney: 0, shifts: 0, actualMoney: 0, excessMoney: 0 });
 
-            return { branchesList, grandTotals, selectedBranch };
+            return { branchesList, grandTotals, selectedPeriod, selectedBranch };
         }
 
         function renderReportContent() {
@@ -2728,11 +3344,17 @@
             const subtitleEl = document.getElementById('reportSubtitle');
             if (!container) return;
 
-            const { branchesList, grandTotals } = buildAggregatedReportData();
+            const { branchesList, grandTotals, selectedPeriod, selectedBranch } = buildAggregatedReportData();
             if (subtitleEl) {
-                subtitleEl.textContent = reportScope === 'current'
-                    ? `Kỳ báo cáo: Tháng ${String(state.month).padStart(2, '0')}/${state.year} • Đơn giá: ${formatCurrency(state.rate)} đ/ca`
-                    : `Kỳ báo cáo: Tổng hợp toàn bộ ${Object.keys(allSavedSheets).length} bảng tháng đã lưu trên hệ thống`;
+                const basePeriodText = reportScope === 'current'
+                    ? `Tháng ${String(state.month).padStart(2, '0')}/${state.year} • Đơn giá: ${formatCurrency(state.rate)} đ/ca`
+                    : `Tổng hợp toàn bộ ${Object.keys(allSavedSheets).length} bảng tháng đã lưu`;
+                const filterTags = [];
+                if (selectedPeriod !== 'ALL') filterTags.push(`Kỳ: ${selectedPeriod}`);
+                if (selectedBranch !== 'ALL') filterTags.push(`CN: ${selectedBranch}`);
+                subtitleEl.textContent = filterTags.length > 0
+                    ? `${basePeriodText} • Lọc: ${filterTags.join(' | ')}`
+                    : basePeriodText;
             }
 
             if (branchesList.length === 0) {
@@ -2856,15 +3478,10 @@
                                     const colSpanCount = reportScope === 'all' ? 7 : 6;
                                     let groupRows = `
                                         <tr class="bg-slate-100/90 border-y border-slate-300">
-                                            <td colspan="${colSpanCount}" class="py-2 px-3 font-bold text-slate-800 text-xs uppercase tracking-wide">
-                                                <div class="flex flex-wrap items-center justify-between gap-2">
-                                                    <span class="flex items-center gap-1.5 text-indigo-900">
-                                                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-600"></i>
-                                                        ${bIdx + 1}. ${escapeHtml(b.branch)} (${b.employees.length} nhân sự)
-                                                    </span>
-                                                    <span class="text-[11px] font-semibold text-slate-600">
-                                                        Cộng chi nhánh: <strong class="text-emerald-700">${b.totalShifts} công</strong> • <strong class="text-slate-900">${formatCurrency(b.totalActual)} đ</strong>
-                                                    </span>
+                                            <td colspan="${colSpanCount}" class="py-2 px-3 font-bold text-indigo-900 text-xs uppercase tracking-wide">
+                                                <div class="flex items-center gap-1.5">
+                                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-600"></i>
+                                                    <span>${bIdx + 1}. ${escapeHtml(b.branch)}</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -2873,12 +3490,12 @@
                                     groupRows += b.employees.map((emp, eIdx) => `
                                         <tr class="hover:bg-blue-50/30">
                                             <td class="py-2 px-3 text-center text-slate-400 text-xs">${eIdx + 1}</td>
-                                            <td class="py-2 px-3 font-semibold text-slate-800">${escapeHtml(emp.name)}</td>
+                                            <td class="py-2 px-3 font-normal text-slate-800">${escapeHtml(emp.name)}</td>
                                             ${reportScope === 'all' ? `<td class="py-2 px-3 text-center text-xs text-slate-500">${emp.monthsList.join(', ')}</td>` : ''}
-                                            <td class="py-2 px-3 text-right text-blue-700 font-medium">${formatCurrency(emp.targetMoney)}</td>
-                                            <td class="py-2 px-3 text-center font-bold text-emerald-700">${emp.shifts}</td>
-                                            <td class="py-2 px-3 text-right font-bold text-slate-800">${formatCurrency(emp.actualMoney)}</td>
-                                            <td class="py-2 px-3 text-right font-medium ${emp.excessMoney > 0 ? 'text-amber-600' : 'text-slate-400'}">${formatCurrency(emp.excessMoney)}</td>
+                                            <td class="py-2 px-3 text-right text-blue-700 font-normal">${formatCurrency(emp.targetMoney)}</td>
+                                            <td class="py-2 px-3 text-center font-normal text-emerald-700">${emp.shifts}</td>
+                                            <td class="py-2 px-3 text-right font-normal text-slate-800">${formatCurrency(emp.actualMoney)}</td>
+                                            <td class="py-2 px-3 text-right font-normal ${emp.excessMoney > 0 ? 'text-amber-600' : 'text-slate-400'}">${formatCurrency(emp.excessMoney)}</td>
                                         </tr>
                                     `).join('');
 
@@ -2900,7 +3517,7 @@
                 return;
             }
 
-            const { branchesList, grandTotals } = buildAggregatedReportData();
+            const { branchesList, grandTotals, selectedPeriod, selectedBranch } = buildAggregatedReportData();
             if (branchesList.length === 0) {
                 showToast('Không có dữ liệu để xuất báo cáo.', 'warning');
                 return;
@@ -2930,6 +3547,10 @@
             const periodTitle = reportScope === 'current'
                 ? `THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`
                 : `TỔNG HỢP TẤT CẢ CÁC THÁNG (${Object.keys(allSavedSheets).length} KỲ)`;
+            const activeFilterInfo = [
+                selectedPeriod !== 'ALL' ? `Kỳ thanh toán: ${selectedPeriod}` : '',
+                selectedBranch !== 'ALL' ? `Chi nhánh: ${selectedBranch}` : ''
+            ].filter(Boolean).join(' — ');
 
             ws.mergeCells('A1:G1');
             const c1 = ws.getCell('A1');
@@ -2940,7 +3561,7 @@
 
             ws.mergeCells('A2:G2');
             const c2 = ws.getCell('A2');
-            c2.value = `Kỳ báo cáo: ${periodTitle}`;
+            c2.value = activeFilterInfo ? `Kỳ báo cáo: ${periodTitle} (${activeFilterInfo})` : `Kỳ báo cáo: ${periodTitle}`;
             c2.font = { name: 'Times New Roman', size: 11, italic: true, color: { argb: 'FF334155' } };
             c2.alignment = { horizontal: 'center', vertical: 'middle' };
             ws.getRow(2).height = 18;
@@ -3018,15 +3639,21 @@
             });
 
             branchesList.forEach((b, bIdx) => {
-                ws.mergeCells(curRow, 1, curRow, 7);
                 const grpRow = ws.getRow(curRow++);
                 grpRow.height = 21;
-                const grpCell = grpRow.getCell(1);
-                grpCell.value = `${bIdx + 1}. Chi nhánh: ${b.branch} (${b.employees.length} nhân sự — Tổng công: ${b.totalShifts} — Thành tiền: ${formatCurrency(b.totalActual)} đ)`;
-                grpCell.font = { ...fontBase, bold: true, color: { argb: 'FF1E1B4B' } };
-                grpCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
-                grpCell.alignment = { horizontal: 'left', vertical: 'middle' };
-                for (let c = 1; c <= 7; c++) grpRow.getCell(c).border = thinBorder;
+                const grpVals = ['', `${bIdx + 1}. ${b.branch}`, '', b.totalTarget, b.totalShifts, b.totalActual, b.totalExcess];
+                grpVals.forEach((v, cIdx) => {
+                    const cell = grpRow.getCell(cIdx + 1);
+                    cell.value = v;
+                    cell.font = { ...fontBase, bold: true, color: { argb: 'FF1E1B4B' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
+                    cell.alignment = {
+                        horizontal: cIdx === 1 ? 'left' : (cIdx >= 3 && cIdx !== 4 ? 'right' : 'center'),
+                        vertical: 'middle'
+                    };
+                    if (cIdx === 3 || cIdx === 5 || cIdx === 6) cell.numFmt = '#,##0';
+                    cell.border = thinBorder;
+                });
 
                 b.employees.forEach((emp, eIdx) => {
                     const r = ws.getRow(curRow++);
@@ -3036,7 +3663,7 @@
                     vals.forEach((v, cIdx) => {
                         const cell = r.getCell(cIdx + 1);
                         cell.value = v;
-                        cell.font = { ...fontBase, bold: cIdx === 5 };
+                        cell.font = { ...fontBase, bold: false };
                         cell.alignment = {
                             horizontal: (cIdx === 1 || cIdx === 2) ? 'left' : (cIdx >= 3 && cIdx !== 4 ? 'right' : 'center'),
                             vertical: 'middle'

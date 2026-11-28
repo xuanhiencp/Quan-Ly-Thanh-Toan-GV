@@ -69,379 +69,448 @@
         .table-container::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        /* Thanh cuộn mảnh cho Sidebar */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
     </style>
 </head>
-<body class="bg-slate-100/70 text-slate-800 min-h-screen antialiased">
+<body class="bg-slate-100/80 text-slate-800 min-h-screen antialiased flex overflow-x-hidden">
 
-    <!-- Thanh tiêu đề & điều khiển chính -->
-    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 shadow-2xs">
-        <div class="max-w-[1680px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-            <!-- Nhận diện ứng dụng & chuyển đổi phân hệ -->
-            <div class="flex items-center gap-3 flex-wrap">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
-                    <i data-lucide="calendar-check-2" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h1 id="mainAppTitle" class="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">Chấm Công Tự Động Theo Tháng</h1>
-                        <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-medium px-2.5 py-0.5 rounded-full">
-                            <i data-lucide="database" class="w-3 h-3 text-blue-600"></i>
-                            <span id="cloudSyncText">Đang kết nối lưu trữ...</span>
-                        </span>
+    <!-- Lớp phủ nền tối trên Mobile khi mở Sidebar -->
+    <div id="sidebarBackdrop" onclick="closeMobileSidebar()" class="fixed inset-0 bg-slate-900/45 backdrop-blur-2xs z-40 hidden lg:hidden transition-opacity"></div>
+
+    <!-- SIDEBAR MENU BÊN TRÁI (CHUẨN PHẦN MỀM QUẢN TRỊ HIỆN ĐẠI) -->
+    <aside id="appSidebar" class="fixed lg:sticky top-0 left-0 z-50 h-screen w-68 shrink-0 bg-white border-r border-slate-200/90 flex flex-col justify-between transition-all duration-200 -translate-x-full lg:translate-x-0 shadow-xl lg:shadow-none">
+        <!-- Phần đầu Sidebar: Logo & Thương hiệu -->
+        <div class="flex flex-col flex-1 min-h-0">
+            <div class="h-16 px-4 border-b border-slate-200/80 flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-sm shrink-0">
+                        <i data-lucide="calendar-check-2" class="w-5 h-5"></i>
                     </div>
-                    <p id="mainAppSubtitle" class="text-xs text-slate-500 hidden sm:block">Phân bổ ca ngẫu nhiên tự động • Quản lý đa kỳ theo chi nhánh</p>
+                    <div class="sidebar-label min-w-0">
+                        <div class="font-bold text-sm text-slate-900 tracking-tight truncate">HR TimeSheet Pro</div>
+                        <div class="text-[11px] font-medium text-slate-500 truncate">Quản lý công &amp; Thù lao</div>
+                    </div>
                 </div>
-
-                <!-- Bộ chuyển đổi giữa 3 phân hệ: Chấm Công, Yêu Cầu Thanh Toán & Danh Sách Rủi Ro BHXH -->
-                <div class="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/90 text-xs font-semibold ml-0 sm:ml-2 flex-wrap gap-0.5">
-                    <button id="tabViewTimesheet" onclick="switchMainView('timesheet')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-blue-700 shadow-2xs transition-all cursor-pointer">
-                        <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
-                        <span>Chấm Công Theo Tháng</span>
-                    </button>
-                    <button id="tabViewPayment" onclick="switchMainView('payment')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer">
-                        <i data-lucide="receipt-text" class="w-3.5 h-3.5"></i>
-                        <span>Yêu Cầu Thanh Toán</span>
-                    </button>
-                    <button id="tabViewBhxh" onclick="switchMainView('bhxh')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer">
-                        <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-600"></i>
-                        <span>Danh Sách Rủi Ro BHXH</span>
-                        <span id="bhxhTabCountBadge" class="hidden ml-0.5 px-1.5 py-0.2 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-full">0</span>
-                    </button>
-                </div>
+                <button type="button" onclick="closeMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
 
-            <!-- Cụm cấu hình kỳ & hành động chính -->
-            <div class="flex flex-wrap items-center gap-2">
-                <!-- Nhóm tham số tính công: Tháng/Năm + Đơn giá -->
-                <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 divide-x divide-slate-200">
-                    <div class="flex items-center gap-1 pr-1.5">
-                        <select id="selectMonth" aria-label="Chọn tháng" class="bg-white text-xs sm:text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500 cursor-pointer">
-                            <option value="1">Tháng 01</option>
-                            <option value="2">Tháng 02</option>
-                            <option value="3">Tháng 03</option>
-                            <option value="4">Tháng 04</option>
-                            <option value="5">Tháng 05</option>
-                            <option value="6">Tháng 06</option>
-                            <option value="7">Tháng 07</option>
-                            <option value="8" selected>Tháng 08</option>
-                            <option value="9">Tháng 09</option>
-                            <option value="10">Tháng 10</option>
-                            <option value="11">Tháng 11</option>
-                            <option value="12">Tháng 12</option>
-                        </select>
-                        <select id="selectYear" aria-label="Chọn năm" class="bg-white text-xs sm:text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500 cursor-pointer">
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026" selected>2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                        </select>
-                        <span id="calendarRangeBadge" class="hidden xl:inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200/70" title="Lịch chuẩn thực tế của tháng đang chọn">
-                            31 ngày
-                        </span>
+            <!-- Danh sách Menu chia theo nhóm -->
+            <nav class="flex-1 overflow-y-auto sidebar-scroll px-3 py-4 space-y-5 text-xs">
+                <!-- NHÓM 1: BẢNG CÔNG V1 (250.000đ/ca) -->
+                <div class="space-y-1">
+                    <div class="sidebar-group-title px-2.5 pb-1 flex items-center justify-between">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Bảng Công V1</span>
+                        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">250k/ca</span>
                     </div>
-                    <div class="flex items-center gap-1.5 pl-2.5 pr-1.5">
-                        <span class="text-xs font-medium text-slate-500 hidden md:inline">Đơn giá/ca:</span>
-                        <input type="text" id="ratePerShift" value="250.000" aria-label="Đơn giá mỗi ca" class="w-24 text-right text-xs sm:text-sm font-bold text-blue-700 bg-white px-2 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500">
-                        <span class="text-xs font-semibold text-slate-500">đ</span>
-                    </div>
-                </div>
-
-                <!-- Hành động chính -->
-                <button id="btnRandomizeAll" onclick="randomizeAll()" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
-                    <i data-lucide="shuffle" class="w-4 h-4"></i>
-                    <span>Chấm Ngẫu Nhiên</span>
-                </button>
-
-                <button onclick="openReportModal()" title="Xem báo cáo tổng hợp theo kỳ thanh toán & chi nhánh" class="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
-                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
-                    <span>Báo Cáo</span>
-                </button>
-
-                <button id="btnExportMain" onclick="exportActiveViewExcel()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span id="btnExportMainLabel">Xuất Excel</span>
-                </button>
-
-                <!-- Menu Tiện ích hệ thống gọn gàng -->
-                <div class="relative" id="systemMenuWrapper">
-                    <button type="button" onclick="toggleSystemMenu(event)" title="Tiện ích hệ thống & Sao lưu" class="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer">
-                        <i data-lucide="settings-2" class="w-4 h-4 text-slate-600"></i>
-                        <span class="hidden lg:inline">Hệ thống</span>
-                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <button id="tabViewTimesheet" onclick="switchMainView('timesheet'); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold transition-all cursor-pointer">
+                        <i data-lucide="calendar-days" class="w-4 h-4 shrink-0"></i>
+                        <span class="sidebar-label truncate">Chấm Công Theo Tháng</span>
                     </button>
-                    <div id="systemMenuDropdown" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-40 text-xs">
-                        <button onclick="closeSystemMenu(); copyFromPreviousSheet();" class="w-full px-3.5 py-2.5 text-left hover:bg-amber-50/80 text-slate-700 flex items-center gap-2.5 cursor-pointer">
-                            <i data-lucide="copy-plus" class="w-4 h-4 text-amber-600"></i>
-                            <div>
-                                <p class="font-semibold text-slate-800">Lấy DS từ bảng khác</p>
-                                <p class="text-[11px] text-slate-400">Sao chép nhân sự từ tháng gần nhất</p>
-                            </div>
-                        </button>
-                        <button onclick="closeSystemMenu(); openBackupModal();" class="w-full px-3.5 py-2.5 text-left hover:bg-violet-50/80 text-slate-700 flex items-center gap-2.5 cursor-pointer">
-                            <i data-lucide="hard-drive-download" class="w-4 h-4 text-violet-600"></i>
-                            <div>
-                                <p class="font-semibold text-slate-800">Backup / Khôi phục DB</p>
-                                <p class="text-[11px] text-slate-400">Sao lưu hoặc nhập file dữ liệu .json</p>
-                            </div>
-                        </button>
-                        <div class="my-1 border-t border-slate-100"></div>
-                        <button onclick="closeSystemMenu(); resetDefaultColumns();" class="w-full px-3.5 py-2.5 text-left hover:bg-slate-50 text-slate-700 flex items-center gap-2.5 cursor-pointer">
-                            <i data-lucide="columns-3" class="w-4 h-4 text-slate-500"></i>
-                            <div>
-                                <p class="font-semibold text-slate-800">Khôi phục cột mặc định</p>
-                                <p class="text-[11px] text-slate-400">Đặt lại thứ tự sắp xếp các cột</p>
-                            </div>
-                        </button>
-                    </div>
+                    <button id="tabViewPayment" onclick="switchMainView('payment'); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                        <i data-lucide="receipt-text" class="w-4 h-4 shrink-0"></i>
+                        <span class="sidebar-label truncate">Yêu Cầu Thanh Toán</span>
+                    </button>
+                    <button id="tabViewBhxh" onclick="switchMainView('bhxh'); closeMobileSidebar();" class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                        <span class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-rose-600 shrink-0"></i>
+                            <span class="sidebar-label truncate">Danh Sách Rủi Ro BHXH</span>
+                        </span>
+                        <span id="bhxhTabCountBadge" class="hidden px-1.5 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-full shrink-0">0</span>
+                    </button>
                 </div>
-            </div>
+
+                <!-- NHÓM 2: BẢNG CÔNG V2 (450.000đ/ca) -->
+                <div class="space-y-1 pt-2 border-t border-slate-100">
+                    <div class="sidebar-group-title px-2.5 pb-1 flex items-center justify-between">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-violet-500">Bảng Công V2</span>
+                        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">450k/ca</span>
+                    </div>
+                    <button id="tabViewTimesheetV2" onclick="switchMainView('timesheet_v2'); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-violet-50/70 hover:text-violet-900 font-medium transition-all cursor-pointer">
+                        <i data-lucide="calendar-plus" class="w-4 h-4 text-violet-600 shrink-0"></i>
+                        <span class="sidebar-label truncate">Chấm công V2</span>
+                    </button>
+                    <button id="tabViewPaymentV2" onclick="switchMainView('payment_v2'); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-violet-50/70 hover:text-violet-900 font-medium transition-all cursor-pointer">
+                        <i data-lucide="file-check-2" class="w-4 h-4 text-violet-600 shrink-0"></i>
+                        <span class="sidebar-label truncate">Yêu cầu thanh toán V2</span>
+                    </button>
+                    <button id="tabViewBhxhV2" onclick="switchMainView('bhxh_v2'); closeMobileSidebar();" class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-violet-50/70 hover:text-violet-900 font-medium transition-all cursor-pointer">
+                        <span class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-rose-600 shrink-0"></i>
+                            <span class="sidebar-label truncate">Danh sách rủi ro BHXH V2</span>
+                        </span>
+                        <span id="bhxhTabCountBadgeV2" class="hidden px-1.5 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-full shrink-0">0</span>
+                    </button>
+                </div>
+
+                <!-- NHÓM 3: BÁO CÁO & TIỆN ÍCH HỆ THỐNG -->
+                <div class="space-y-1 pt-2 border-t border-slate-100">
+                    <div class="sidebar-group-title px-2.5 pb-1">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Thống Kê &amp; Hệ Thống</span>
+                    </div>
+                    <button onclick="openReportModal(); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-sky-50 hover:text-sky-800 font-medium transition-all cursor-pointer">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-sky-600 shrink-0"></i>
+                        <span class="sidebar-label truncate">Báo Cáo Tổng Hợp</span>
+                    </button>
+                    <button onclick="copyFromPreviousSheet(); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-amber-50 hover:text-amber-800 font-medium transition-all cursor-pointer">
+                        <i data-lucide="copy-plus" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                        <span class="sidebar-label truncate">Lấy DS từ bảng khác</span>
+                    </button>
+                    <button onclick="openBackupModal(); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-violet-50 hover:text-violet-800 font-medium transition-all cursor-pointer">
+                        <i data-lucide="hard-drive-download" class="w-4 h-4 text-violet-600 shrink-0"></i>
+                        <span class="sidebar-label truncate">Backup / Khôi phục DB</span>
+                    </button>
+                    <button onclick="resetDefaultColumns(); closeMobileSidebar();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium transition-all cursor-pointer">
+                        <i data-lucide="columns-3" class="w-4 h-4 text-slate-500 shrink-0"></i>
+                        <span class="sidebar-label truncate">Khôi phục cột mặc định</span>
+                    </button>
+                </div>
+            </nav>
         </div>
-    </header>
 
-    <main class="max-w-[1680px] mx-auto px-4 sm:px-6 py-4 space-y-4">
-        <!-- Hàng 1: 4 Thẻ KPI Tổng Quan & Quy tắc chấm công -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-stretch">
-            <!-- 4 Thẻ KPI (chiếm 7 cột trên màn hình lớn) -->
-            <div class="xl:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div class="bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+        <!-- Phần chân Sidebar: Trạng thái lưu trữ & Thu gọn Sidebar -->
+        <div class="p-3 border-t border-slate-200/80 bg-slate-50/70 space-y-2 shrink-0">
+            <div id="cloudSyncBadge" class="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200/90 text-[11px] font-medium px-2.5 py-2 rounded-xl">
+                <i data-lucide="cloud-check" class="w-3.5 h-3.5 shrink-0"></i>
+                <span id="cloudSyncText" class="sidebar-label truncate">Đã lưu tự động</span>
+            </div>
+            <button type="button" onclick="toggleDesktopSidebar()" class="hidden lg:flex w-full items-center justify-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer" title="Thu gọn / Mở rộng thanh bên">
+                <i id="sidebarCollapseIcon" data-lucide="panel-left-close" class="w-4 h-4 shrink-0"></i>
+                <span class="sidebar-label">Thu gọn menu</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- KHU VỰC NỘI DUNG CHÍNH BÊN PHẢI -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <!-- Top Header Bar -->
+        <header class="bg-white border-b border-slate-200/90 sticky top-0 z-30 shadow-2xs">
+            <div class="px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+                <!-- Nút mở menu trên Mobile + Tiêu đề phân hệ hiện tại -->
+                <div class="flex items-center gap-3 min-w-0">
+                    <button type="button" onclick="openMobileSidebar()" aria-label="Mở menu điều hướng" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shrink-0">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h1 id="mainAppTitle" class="text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate">
+                                Chấm Công Tự Động Theo Tháng
+                            </h1>
+                            <span id="activeVersionPill" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                                V1 • 250.000đ
+                            </span>
+                        </div>
+                        <p id="mainAppSubtitle" class="text-xs text-slate-500 truncate mt-0.5">
+                            Đơn giá 250.000đ/ca • Phân bổ ca ngẫu nhiên tự động • Quản lý đa kỳ theo chi nhánh
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Cụm cấu hình kỳ & hành động chính -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Nhóm tham số tính công: Tháng/Năm + Đơn giá -->
+                    <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 divide-x divide-slate-200">
+                        <div class="flex items-center gap-1 pr-1.5">
+                            <select id="selectMonth" aria-label="Chọn tháng" class="bg-white text-xs sm:text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500 cursor-pointer">
+                                <option value="1">Tháng 01</option>
+                                <option value="2">Tháng 02</option>
+                                <option value="3">Tháng 03</option>
+                                <option value="4">Tháng 04</option>
+                                <option value="5">Tháng 05</option>
+                                <option value="6">Tháng 06</option>
+                                <option value="7">Tháng 07</option>
+                                <option value="8" selected>Tháng 08</option>
+                                <option value="9">Tháng 09</option>
+                                <option value="10">Tháng 10</option>
+                                <option value="11">Tháng 11</option>
+                                <option value="12">Tháng 12</option>
+                            </select>
+                            <select id="selectYear" aria-label="Chọn năm" class="bg-white text-xs sm:text-sm font-semibold text-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500 cursor-pointer">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                            <span id="calendarRangeBadge" class="hidden xl:inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200/70" title="Lịch chuẩn thực tế của tháng đang chọn">
+                                31 ngày
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1.5 pl-2.5 pr-1.5">
+                            <span class="text-xs font-medium text-slate-500 hidden md:inline">Đơn giá/ca:</span>
+                            <input type="text" id="ratePerShift" value="250.000" aria-label="Đơn giá mỗi ca" class="w-24 text-right text-xs sm:text-sm font-bold text-blue-700 bg-white px-2 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-blue-500">
+                            <span class="text-xs font-semibold text-slate-500">đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Hành động chính -->
+                    <button id="btnRandomizeAll" onclick="randomizeAll()" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i>
+                        <span>Chấm Ngẫu Nhiên</span>
+                    </button>
+
+                    <button id="btnExportMain" onclick="exportActiveViewExcel()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span id="btnExportMainLabel">Xuất Excel</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="w-full max-w-[1680px] mx-auto px-4 sm:px-6 py-4 space-y-3">
+            <!-- Dải chỉ số KPI tổng quan gọn nhẹ -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs">
+                <div class="bg-white px-3.5 py-2.5 rounded-xl border border-slate-200/90 shadow-2xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-medium text-slate-500">Tổng nhân sự</p>
+                        <p id="statTotalEmployees" class="text-base font-bold text-slate-900 mt-0.5">0</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
                         <i data-lucide="users" class="w-4 h-4"></i>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-[11px] font-medium text-slate-500 truncate">Nhân sự hiển thị</p>
-                        <p id="statTotalEmployees" class="text-lg font-bold text-slate-900 leading-tight mt-0.5">0</p>
+                </div>
+                <div class="bg-white px-3.5 py-2.5 rounded-xl border border-blue-200/90 shadow-2xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-medium text-blue-600">Tổng số công</p>
+                        <p id="statTotalShifts" class="text-base font-bold text-blue-700 mt-0.5">0</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <i data-lucide="calendar-check" class="w-4 h-4"></i>
                     </div>
                 </div>
-
-                <div class="bg-white px-4 py-3 rounded-2xl border border-blue-100 shadow-2xs flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                <div class="bg-white px-3.5 py-2.5 rounded-xl border border-emerald-200/90 shadow-2xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-medium text-emerald-600">Tổng tiền có thuế</p>
+                        <p id="statTotalMoney" class="text-base font-bold text-emerald-700 mt-0.5">0 đ</p>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-[11px] font-medium text-slate-500 truncate">Tổng số công</p>
-                        <p id="statTotalShifts" class="text-lg font-bold text-blue-700 leading-tight mt-0.5">0</p>
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <i data-lucide="banknote" class="w-4 h-4"></i>
                     </div>
                 </div>
-
-                <div class="bg-white px-4 py-3 rounded-2xl border border-emerald-100 shadow-2xs flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                <div class="bg-white px-3.5 py-2.5 rounded-xl border border-amber-200/90 shadow-2xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-medium text-amber-600">Tổng tiền còn lại</p>
+                        <p id="statTotalExcess" class="text-base font-bold text-amber-600 mt-0.5">0 đ</p>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-[11px] font-medium text-slate-500 truncate">Số tiền có thuế</p>
-                        <div class="flex items-baseline gap-1.5 mt-0.5">
-                            <p id="statTotalMoney" class="text-base sm:text-lg font-bold text-emerald-700 leading-tight truncate">0 đ</p>
-                            <span id="statCompletionRate" class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md shrink-0">0%</span>
+                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="coins" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-white px-3.5 py-2.5 rounded-xl border border-indigo-200/90 shadow-2xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-medium text-indigo-600">Tỷ lệ khớp quỹ</p>
+                        <p id="statCompletionRate" class="text-base font-bold text-indigo-700 mt-0.5">0%</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khu vực làm việc chính -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+                <!-- BẢNG ĐIỀU KHIỂN CHỨC NĂNG PHÂN NHÓM KHOA HỌC PHÍA TRÊN -->
+                <div class="p-3 bg-slate-50/90 border-b border-slate-200 space-y-2.5 text-xs">
+                    <!-- HÀNG 1: NHÓM NHẬP DỮ LIỆU • NHÓM QUY TẮC/NGHIỆP VỤ • NHÓM BẢNG ĐÃ LƯU -->
+                    <div class="flex flex-wrap items-stretch gap-2.5">
+                        <!-- NHÓM 1: QUẢN LÝ DỮ LIỆU & NHẬP LIỆU -->
+                        <div class="bg-white px-3 py-2 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-1.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1">
+                                    <i data-lucide="database-zap" class="w-3 h-3"></i>
+                                    1. Quản lý dữ liệu
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="addNewRow()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2.5 py-1.5 rounded-lg transition-all cursor-pointer">
+                                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                                    <span>Thêm nhân sự</span>
+                                </button>
+                                <button onclick="openBulkModal('excel-file')" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold px-2.5 py-1.5 rounded-lg transition-all cursor-pointer">
+                                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                    <span>Import Excel / Sheet</span>
+                                </button>
+                                <button onclick="openBulkModal('paste')" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold px-2.5 py-1.5 rounded-lg transition-all cursor-pointer">
+                                    <i data-lucide="clipboard-paste" class="w-3.5 h-3.5 text-slate-500"></i>
+                                    <span>Dán nhanh</span>
+                                </button>
+                                <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleExcelFileImport(event)">
+                                <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="handleBackupFileSelect(event)">
+                            </div>
+                        </div>
+
+                        <!-- NHÓM 2A: QUY TẮC CHẤM CÔNG TỰ ĐỘNG (Hiển thị ở tab Chấm công) -->
+                        <div id="randomRulesPanel" class="bg-white px-3 py-2 rounded-xl border border-indigo-200/90 shadow-2xs flex flex-col justify-between gap-1.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1">
+                                <i data-lucide="sliders-horizontal" class="w-3 h-3"></i>
+                                2. Quy tắc chấm công tự động
+                            </span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="inline-flex items-center gap-1.5 text-slate-700 font-medium cursor-pointer select-none px-2 py-1 rounded-lg bg-slate-50 hover:bg-indigo-50/70 border border-slate-200/70">
+                                    <input type="checkbox" id="excludeSunday" checked onchange="randomizeAll(true)" class="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 cursor-pointer">
+                                    <span>Trừ Chủ Nhật</span>
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-slate-700 font-medium cursor-pointer select-none px-2 py-1 rounded-lg bg-slate-50 hover:bg-indigo-50/70 border border-slate-200/70">
+                                    <input type="checkbox" id="excludeSaturday" onchange="randomizeAll(true)" class="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 cursor-pointer">
+                                    <span>Trừ Thứ 7</span>
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-slate-700 font-medium cursor-pointer select-none px-2 py-1 rounded-lg bg-slate-50 hover:bg-indigo-50/70 border border-slate-200/70" title="Phân bổ công rải đều các tuần, tránh chấm dồn cục">
+                                    <input type="checkbox" id="naturalSpread" checked onchange="randomizeAll(true)" class="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 cursor-pointer">
+                                    <span>Rải đều các tuần</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- NHÓM 2B: CÔNG THỨC THUẾ TNCN (Hiển thị ở tab Yêu cầu thanh toán) -->
+                        <div id="paymentTaxInfoPanel" class="hidden bg-amber-50/90 px-3 py-2 rounded-xl border border-amber-200/90 shadow-2xs flex flex-col justify-between gap-1">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                                <i data-lucide="percent" class="w-3 h-3 text-amber-600"></i>
+                                2. Công thức tính thuế TNCN 10%
+                            </span>
+                            <span id="paymentTaxFormulaText" class="text-slate-700 leading-relaxed">
+                                <strong>Số tiền có thuế</strong> = Số tiền yêu cầu ÷ 0,9 &bull;
+                                <strong>Tổng công</strong> = ⌊Số tiền có thuế ÷ 250.000⌋ &bull;
+                                <strong>Thu nhập tính thuế</strong> = Tổng công × 250.000
+                            </span>
+                        </div>
+
+                        <!-- NHÓM 2C: TIÊU CHÍ RÀ SOÁT RỦI RO BHXH (Hiển thị ở tab Danh sách rủi ro BHXH) -->
+                        <div id="bhxhRiskRulePanel" class="hidden bg-rose-50/90 px-3 py-2 rounded-xl border border-rose-200/90 shadow-2xs flex flex-col justify-between gap-1.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-rose-800 flex items-center gap-1">
+                                <i data-lucide="scale" class="w-3 h-3 text-rose-600"></i>
+                                2. Tiêu chí rà soát rủi ro BHXH (Luật BHXH 2024)
+                            </span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="inline-flex items-center gap-1 text-slate-700 font-medium bg-white px-2 py-1 rounded-lg border border-rose-200">
+                                    <span>Ngưỡng lương:</span>
+                                    <input type="text" id="bhxhThresholdInput" value="2.340.000" onchange="onBhxhRuleChanged()" class="w-22 text-right font-bold text-rose-700 focus:outline-none">
+                                    <span>đ</span>
+                                </label>
+                                <label class="inline-flex items-center gap-1 text-slate-700 font-medium bg-white px-2 py-1 rounded-lg border border-rose-200">
+                                    <span>Ngày dạy &ge;</span>
+                                    <input type="number" id="bhxhMinDaysInput" value="12" min="1" max="31" onchange="onBhxhRuleChanged()" class="w-11 text-center font-bold text-amber-700 focus:outline-none">
+                                </label>
+                                <label class="inline-flex items-center gap-1 text-slate-700 font-medium bg-white px-2 py-1 rounded-lg border border-rose-200">
+                                    <span>Giờ/ca:</span>
+                                    <select id="bhxhHoursPerShiftSelect" onchange="onBhxhRuleChanged()" class="font-bold text-slate-800 focus:outline-none cursor-pointer">
+                                        <option value="1">1h</option>
+                                        <option value="1.5">1.5h</option>
+                                        <option value="2" selected>2h</option>
+                                        <option value="2.5">2.5h</option>
+                                        <option value="3">3h</option>
+                                    </select>
+                                </label>
+                                <label class="inline-flex items-center gap-1 text-slate-700 font-medium bg-white px-2 py-1 rounded-lg border border-rose-200">
+                                    <span>Mức rủi ro:</span>
+                                    <select id="bhxhRiskLevelFilter" onchange="renderTable()" class="font-bold text-rose-800 focus:outline-none cursor-pointer">
+                                        <option value="RISK_ONLY" selected>Có rủi ro (Cao &amp; Lưu ý)</option>
+                                        <option value="HIGH">Chỉ Rủi ro cao</option>
+                                        <option value="MEDIUM">Chỉ Cần lưu ý</option>
+                                        <option value="ALL">Tất cả nhân sự</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- NHÓM 3: DANH SÁCH BẢNG KỲ ĐÃ LƯU -->
+                        <div id="savedSheetsBar" class="bg-white px-3 py-2 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-1.5 flex-1 min-w-[260px]">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                                    <i data-lucide="folder-kanban" class="w-3 h-3 text-indigo-600"></i>
+                                    3. Bảng chấm công đã lưu (<span id="savedSheetsCount">0</span>)
+                                </span>
+                                <span class="text-[10px] text-slate-400">Bấm để chuyển nhanh giữa các tháng</span>
+                            </div>
+                            <div id="savedSheetsList" class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-slate-400 italic">Đang tải...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HÀNG 2: NHÓM BỘ LỌC & TRA CỨU NHANH -->
+                    <div class="bg-white px-3 py-2 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-sky-700 flex items-center gap-1 pr-1">
+                                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                                4. Bộ lọc &amp; Tra cứu:
+                            </span>
+
+                            <div class="inline-flex items-center gap-1.5 bg-sky-50/80 px-2.5 py-1 rounded-lg border border-sky-200/80">
+                                <span class="text-[11px] font-semibold text-sky-700">Kỳ thanh toán:</span>
+                                <select id="filterPeriod" onchange="onTableFilterChange()" aria-label="Lọc kỳ thanh toán" class="bg-transparent font-semibold text-sky-950 focus:outline-none cursor-pointer">
+                                    <option value="ALL">Tất cả kỳ</option>
+                                </select>
+                            </div>
+
+                            <div class="inline-flex items-center gap-1.5 bg-indigo-50/80 px-2.5 py-1 rounded-lg border border-indigo-200/80">
+                                <span class="text-[11px] font-semibold text-indigo-700">Chi nhánh:</span>
+                                <select id="filterBranch" onchange="onTableFilterChange()" aria-label="Lọc chi nhánh" class="bg-transparent font-semibold text-indigo-950 focus:outline-none cursor-pointer">
+                                    <option value="ALL">Tất cả CN</option>
+                                </select>
+                            </div>
+
+                            <div class="relative inline-flex items-center">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none"></i>
+                                <input type="text" id="filterNameInput" oninput="onTableFilterChange()" placeholder="Tìm theo họ tên nhân sự..."
+                                    class="pl-8 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 w-44 sm:w-56">
+                            </div>
+
+                            <button id="btnResetTableFilters" onclick="resetTableFilters()" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold border border-rose-200 transition-colors cursor-pointer">
+                                <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                                <span>Xóa lọc</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span id="filterResultSummary" class="text-[11px] text-slate-500 font-medium bg-slate-100 px-2.5 py-1 rounded-lg"></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white px-4 py-3 rounded-2xl border border-amber-100 shadow-2xs flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="coins" class="w-4 h-4"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-[11px] font-medium text-slate-500 truncate">Số tiền còn lại</p>
-                        <p id="statTotalExcess" class="text-base sm:text-lg font-bold text-amber-600 leading-tight mt-0.5 truncate">0 đ</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Thanh quy tắc thuật toán ngẫu nhiên (chiếm 5 cột trên màn hình lớn) -->
-            <div id="randomRulesPanel" class="xl:col-span-5 bg-white px-4 py-3 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col justify-center gap-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-indigo-600"></i>
-                        Quy tắc phân bổ ca tự động
-                    </span>
-                    <span class="text-[11px] text-slate-400 hidden sm:inline">Tự động cập nhật khi đổi</span>
-                </div>
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-950 font-medium">
-                        <input type="checkbox" id="excludeSunday" checked onchange="randomizeAll()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                        <span>Trừ Chủ Nhật</span>
-                    </label>
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-950 font-medium">
-                        <input type="checkbox" id="excludeSaturday" onchange="randomizeAll()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                        <span>Trừ Thứ 7</span>
-                    </label>
-                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-950 font-medium" title="Tạo sự biến thiên tự nhiên giữa các tuần và tránh chấm dồn cục">
-                        <input type="checkbox" id="naturalSpread" checked onchange="randomizeAll()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                        <span>Rải đều tự nhiên</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Panel tóm tắt quy tắc thuế TNCN (hiển thị khi mở phân hệ Yêu cầu thanh toán) -->
-            <div id="paymentTaxInfoPanel" class="hidden xl:col-span-5 bg-gradient-to-br from-amber-50/90 to-orange-50/70 px-4 py-3 rounded-2xl border border-amber-200/90 shadow-2xs flex flex-col justify-center gap-1.5">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="percent" class="w-3.5 h-3.5 text-amber-600"></i>
-                        Quy tắc tính ngược thuế TNCN (10%) &amp; Thanh toán
-                    </span>
-                    <span class="text-[11px] font-semibold text-amber-700 bg-white/80 px-2 py-0.5 rounded-full border border-amber-200">Tính ngược thuế 10%</span>
-                </div>
-                <p class="text-xs text-slate-700 leading-relaxed">
-                    <strong>Số tiền có thuế</strong> = Số tiền yêu cầu ÷ 0,9 &bull;
-                    <strong>Tổng công</strong> = ⌊Số tiền có thuế ÷ 250.000⌋ &bull;
-                    <strong>Thu nhập tính thuế</strong> = Tổng công × 250.000
-                </p>
-            </div>
-
-            <!-- Panel cấu hình đánh giá Rủi ro BHXH (Luật BHXH 2024 & BLLĐ 2019) -->
-            <div id="bhxhRiskRulePanel" class="hidden xl:col-span-5 bg-gradient-to-br from-rose-50/90 to-amber-50/70 px-4 py-3 rounded-2xl border border-rose-200/90 shadow-2xs flex flex-col justify-center gap-2">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-bold text-rose-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="scale" class="w-3.5 h-3.5 text-rose-600"></i>
-                        Tiêu chí rà soát BHXH (Luật BHXH 2024)
-                    </span>
-                    <span class="text-[11px] font-semibold text-rose-700 bg-white/90 px-2 py-0.5 rounded-full border border-rose-200">LĐ không trọn thời gian</span>
-                </div>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-                    <label class="inline-flex items-center gap-1 text-slate-700 font-medium" title="Mức tham chiếu đóng BHXH bắt buộc hiện hành (Luật BHXH 2024)">
-                        <span>Ngưỡng lương:</span>
-                        <input type="text" id="bhxhThresholdInput" value="2.340.000" onchange="onBhxhRuleChanged()" class="w-24 text-right font-bold text-rose-700 bg-white px-2 py-0.5 rounded-lg border border-rose-200 focus:outline-none focus:border-rose-500">
-                        <span>đ</span>
-                    </label>
-                    <label class="inline-flex items-center gap-1 text-slate-700 font-medium" title="Số ngày có lịch dạy/tháng để đánh giá tính chất thường xuyên">
-                        <span>Số ngày dạy &ge;</span>
-                        <input type="number" id="bhxhMinDaysInput" value="12" min="1" max="31" onchange="onBhxhRuleChanged()" class="w-12 text-center font-bold text-amber-700 bg-white px-1.5 py-0.5 rounded-lg border border-rose-200 focus:outline-none focus:border-rose-500">
-                        <span>ngày</span>
-                    </label>
-                    <label class="inline-flex items-center gap-1 text-slate-700 font-medium" title="Số giờ dạy trung bình mỗi ca (1 - 3 tiếng/ngày)">
-                        <span>Giờ/ca:</span>
-                        <select id="bhxhHoursPerShiftSelect" onchange="onBhxhRuleChanged()" class="bg-white font-bold text-slate-800 px-1.5 py-0.5 rounded-lg border border-rose-200 focus:outline-none cursor-pointer">
-                            <option value="1">1h</option>
-                            <option value="1.5">1.5h</option>
-                            <option value="2" selected>2h</option>
-                            <option value="2.5">2.5h</option>
-                            <option value="3">3h</option>
-                        </select>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hàng 2: Khu vực làm việc chính (Quản lý kỳ + Thao tác + Lọc + Bảng công) -->
-        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-            <!-- Dải 1: Thanh chuyển đổi nhanh các bảng kỳ đã lưu -->
-            <div id="savedSheetsBar" class="px-4 py-2.5 bg-slate-50/90 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
-                        <i data-lucide="folder-kanban" class="w-3.5 h-3.5 text-indigo-600"></i>
-                        Bảng dữ liệu đã lưu (<span id="savedSheetsCount">0</span>):
-                    </span>
-                    <div id="savedSheetsList" class="flex flex-wrap items-center gap-1.5">
-                        <span class="text-slate-400 italic">Đang tải danh sách bảng...</span>
-                    </div>
-                </div>
-                <span class="text-[11px] text-slate-400 hidden xl:inline-flex items-center gap-1">
-                    <i data-lucide="mouse-pointer-click" class="w-3 h-3"></i>
-                    Cố định cột Họ và tên • Kéo tiêu đề cột để đổi vị trí • Kéo mép phải cột để chỉnh độ rộng
-                </span>
-            </div>
-
-            <!-- Dải 2: Thanh công cụ dữ liệu (Trái) & Bộ lọc phân cấp Mẹ -> Con (Phải) -->
-            <div class="px-4 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <!-- Nhóm nhập liệu -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="addNewRow()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer shadow-2xs">
-                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                        <span>Thêm Nhân Sự</span>
-                    </button>
-                    <button onclick="openBulkModal('excel-file')" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer">
-                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
-                        <span>Import Excel / Google Sheet</span>
-                    </button>
-                    <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleExcelFileImport(event)">
-                    <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="handleBackupFileSelect(event)">
+                <!-- Vùng bảng chấm công chính -->
+                <div id="timesheetTableWrapper" class="table-container overflow-x-auto max-h-[68vh]">
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead id="tableHeader" class="sticky top-0 z-20 shadow-2xs"></thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-200"></tbody>
+                        <tfoot id="tableFooter" class="sticky bottom-0 z-20"></tfoot>
+                    </table>
                 </div>
 
-                <!-- Nhóm bộ lọc theo cấu trúc Mẹ (Kỳ thanh toán) -> Con (Chi nhánh) -> Nhân viên -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center gap-1.5 bg-sky-50/70 px-2.5 py-1 rounded-xl border border-sky-200/80">
-                        <span class="text-[11px] font-semibold text-sky-700 hidden sm:inline">Kỳ:</span>
-                        <select id="filterPeriod" onchange="onTableFilterChange()" aria-label="Lọc kỳ thanh toán" class="bg-transparent font-semibold text-sky-950 py-0.5 focus:outline-none cursor-pointer">
-                            <option value="ALL">Tất cả kỳ thanh toán</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 bg-indigo-50/70 px-2.5 py-1 rounded-xl border border-indigo-200/80">
-                        <span class="text-[11px] font-semibold text-indigo-700 hidden sm:inline">CN:</span>
-                        <select id="filterBranch" onchange="onTableFilterChange()" aria-label="Lọc chi nhánh" class="bg-transparent font-semibold text-indigo-950 py-0.5 focus:outline-none cursor-pointer">
-                            <option value="ALL">Tất cả chi nhánh</option>
-                        </select>
-                    </div>
-
-                    <div class="relative flex items-center">
-                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none"></i>
-                        <input type="text" id="filterNameInput" oninput="onTableFilterChange()" placeholder="Tìm tên nhân sự..."
-                            class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 w-40 sm:w-48">
-                    </div>
-
-                    <button id="btnResetTableFilters" onclick="resetTableFilters()" class="hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold border border-rose-200 transition-colors cursor-pointer">
-                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
-                        <span>Xóa lọc</span>
-                    </button>
-
-                    <span id="filterResultSummary" class="text-slate-500 font-medium pl-1 hidden md:inline"></span>
-                </div>
-            </div>
-
-            <!-- Vùng bảng chấm công chính -->
-            <div id="timesheetTableWrapper" class="table-container overflow-x-auto max-h-[68vh]">
-                <table class="w-full border-collapse text-sm">
-                    <thead id="tableHeader" class="sticky top-0 z-20 shadow-2xs"></thead>
-                    <tbody id="tableBody" class="divide-y divide-slate-200 bg-white"></tbody>
-                    <tfoot id="tableFooter" class="sticky bottom-0 z-20 shadow-[0_-2px_6px_-2px_rgba(0,0,0,0.06)]"></tfoot>
-                </table>
-            </div>
-
-            <!-- Vùng bảng Yêu Cầu Thanh Toán -->
-            <div id="paymentTableWrapper" class="hidden table-container overflow-x-auto max-h-[68vh]">
-                <table class="w-full border-collapse text-sm">
-                    <thead id="paymentTableHeader" class="sticky top-0 z-20 shadow-2xs"></thead>
-                    <tbody id="paymentTableBody" class="divide-y divide-slate-200 bg-white"></tbody>
-                    <tfoot id="paymentTableFooter" class="sticky bottom-0 z-20 shadow-[0_-2px_6px_-2px_rgba(0,0,0,0.06)]"></tfoot>
-                </table>
-            </div>
-
-            <!-- Vùng bảng Danh Sách Rủi Ro BHXH -->
-            <div id="bhxhTableWrapper" class="hidden">
-                <!-- Thanh cảnh báo pháp lý & bộ lọc nhanh mức độ rủi ro -->
-                <div class="px-4 py-3 bg-rose-50/60 border-b border-rose-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div class="flex items-start sm:items-center gap-2 text-slate-700">
-                        <i data-lucide="info" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5 sm:mt-0"></i>
-                        <span>
-                            <strong>Căn cứ Luật BHXH 2024 (hiệu lực 01/07/2025) &amp; BLLĐ 2019:</strong> Giáo viên dạy thêm <strong>1–3 tiếng/ngày</strong> (LĐ không trọn thời gian) có lịch dạy lặp lại thường xuyên và thu nhập tính thuế &ge; mức tham chiếu sẽ thuộc diện <strong>bắt buộc tham gia BHXH</strong> nếu bị xác định là HĐLĐ.
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <span class="font-semibold text-slate-600">Mức rủi ro:</span>
-                        <select id="bhxhRiskLevelFilter" onchange="renderTable()" class="bg-white border border-rose-200 rounded-xl px-2.5 py-1 font-semibold text-slate-800 focus:outline-none focus:border-rose-500 cursor-pointer">
-                            <option value="RISK_ONLY">Chỉ hiện có rủi ro (Cao &amp; Lưu ý)</option>
-                            <option value="HIGH">Chỉ Rủi ro cao (Bắt buộc lưu ý)</option>
-                            <option value="MEDIUM">Chỉ Cần lưu ý</option>
-                            <option value="ALL">Tất cả nhân sự</option>
-                        </select>
-                    </div>
+                <!-- Vùng bảng Yêu Cầu Thanh Toán -->
+                <div id="paymentTableWrapper" class="hidden table-container overflow-x-auto max-h-[68vh]">
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead id="paymentTableHeader" class="sticky top-0 z-20 shadow-2xs"></thead>
+                        <tbody id="paymentTableBody" class="divide-y divide-slate-200"></tbody>
+                        <tfoot id="paymentTableFooter" class="sticky bottom-0 z-20"></tfoot>
+                    </table>
                 </div>
 
-                <div class="table-container overflow-x-auto max-h-[64vh]">
-                    <table class="w-full border-collapse text-sm">
+                <!-- Vùng bảng Danh Sách Rủi Ro BHXH -->
+                <div id="bhxhTableWrapper" class="hidden table-container overflow-x-auto max-h-[68vh]">
+                    <table class="w-full border-collapse text-xs sm:text-sm">
                         <thead id="bhxhTableHeader" class="sticky top-0 z-20 shadow-2xs"></thead>
-                        <tbody id="bhxhTableBody" class="divide-y divide-slate-200 bg-white"></tbody>
-                        <tfoot id="bhxhTableFooter" class="sticky bottom-0 z-20 shadow-[0_-2px_6px_-2px_rgba(0,0,0,0.06)]"></tfoot>
+                        <tbody id="bhxhTableBody" class="divide-y divide-slate-200"></tbody>
+                        <tfoot id="bhxhTableFooter" class="sticky bottom-0 z-20"></tfoot>
                     </table>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <!-- Modal Import Danh Sách (Excel / Google Sheet / Dán nhanh) -->
+    <!-- Modal Import Danh Sách (File Excel / Link Google Sheet / Dán Nhanh) -->
     <div id="bulkModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-xl w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 class="font-bold text-slate-900 flex items-center gap-2">
                     <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
@@ -750,7 +819,8 @@
         }
 
         const state = {
-            activeView: 'timesheet', // 'timesheet' | 'payment' | 'bhxh'
+            activeVersion: 'v1', // 'v1' (250.000đ/ca) | 'v2' (450.000đ/ca)
+            activeView: 'timesheet', // 'timesheet' | 'payment' | 'bhxh' | 'timesheet_v2' | 'payment_v2' | 'bhxh_v2'
             month: 8,
             year: 2026,
             rate: 250000,
@@ -774,6 +844,78 @@
             ]
         };
 
+        const VERSION_CONFIG = {
+            v1: {
+                defaultRate: 250000,
+                label: 'V1',
+                collectionName: 'timesheet_sheets',
+                metaDocName: 'meta',
+                filePrefix: '',
+                defaultSampleEmployees: [
+                    { id: 1, name: "Nguyễn Thị Mai Anh", branch: "Sao Việt Tân Uyên", paymentPeriod: "Tháng 08/2026", targetMoney: 3500000, days: {} },
+                    { id: 2, name: "Trần Văn Hoàng", branch: "Sao Việt Tân Uyên", paymentPeriod: "Tháng 08/2026", targetMoney: 4250000, days: {} },
+                    { id: 3, name: "Lê Thị Thu Hà", branch: "Sao Việt Biên Hòa", paymentPeriod: "Tháng 08/2026", targetMoney: 3000000, days: {} },
+                    { id: 4, name: "Phạm Minh Tuấn", branch: "Sao Việt Biên Hòa", paymentPeriod: "Tháng 08/2026", targetMoney: 5000000, days: {} }
+                ]
+            },
+            v2: {
+                defaultRate: 450000,
+                label: 'V2',
+                collectionName: 'timesheet_sheets_v2',
+                metaDocName: 'meta_v2',
+                filePrefix: '_V2',
+                defaultSampleEmployees: [
+                    { id: 1, name: "Nguyễn Thị Mai Anh", branch: "Sao Việt Tân Uyên", paymentPeriod: "Tháng 08/2026", targetMoney: 4500000, days: {} },
+                    { id: 2, name: "Trần Văn Hoàng", branch: "Sao Việt Tân Uyên", paymentPeriod: "Tháng 08/2026", targetMoney: 5400000, days: {} },
+                    { id: 3, name: "Lê Thị Thu Hà", branch: "Sao Việt Biên Hòa", paymentPeriod: "Tháng 08/2026", targetMoney: 3600000, days: {} },
+                    { id: 4, name: "Phạm Minh Tuấn", branch: "Sao Việt Biên Hòa", paymentPeriod: "Tháng 08/2026", targetMoney: 6300000, days: {} }
+                ]
+            }
+        };
+
+        const versionStores = {
+            v1: { allSavedSheets: {}, initialized: false },
+            v2: { allSavedSheets: {}, initialized: false }
+        };
+
+        function getActiveVersionConfig() {
+            return VERSION_CONFIG[state.activeVersion] || VERSION_CONFIG.v1;
+        }
+
+        function getActiveSavedSheetsMap() {
+            return versionStores[state.activeVersion].allSavedSheets;
+        }
+
+        function updatePaymentFormulaHint() {
+            const formulaEl = document.getElementById('paymentTaxFormulaText');
+            if (!formulaEl) return;
+            const rateStr = formatCurrency(state.rate || getActiveVersionConfig().defaultRate);
+            formulaEl.innerHTML = `
+                <strong>Số tiền có thuế</strong> = Số tiền yêu cầu ÷ 0,9 &bull;
+                <strong>Tổng công</strong> = ⌊Số tiền có thuế ÷ ${rateStr}⌋ &bull;
+                <strong>Thu nhập tính thuế</strong> = Tổng công × ${rateStr}
+            `;
+        }
+
+        function updateBhxhTabBadges() {
+            const badgeV1 = document.getElementById('bhxhTabCountBadge');
+            const badgeV2 = document.getElementById('bhxhTabCountBadgeV2');
+
+            if (state.activeVersion === 'v1') {
+                const countV1 = state.employees.map(evaluateEmployeeBhxhRisk).filter(r => r.riskLevel === 'HIGH' || r.riskLevel === 'MEDIUM').length;
+                if (badgeV1) {
+                    badgeV1.textContent = String(countV1);
+                    badgeV1.classList.toggle('hidden', countV1 === 0);
+                }
+            } else {
+                const countV2 = state.employees.map(evaluateEmployeeBhxhRisk).filter(r => r.riskLevel === 'HIGH' || r.riskLevel === 'MEDIUM').length;
+                if (badgeV2) {
+                    badgeV2.textContent = String(countV2);
+                    badgeV2.classList.toggle('hidden', countV2 === 0);
+                }
+            }
+        }
+
         // --- CÁC HÀM CÔNG THỨC TÍNH TOÁN CHUẨN ---
         // 1. Số tiền có thuế = Số tiền yêu cầu / 0.9 (tính ngược thuế TNCN 10%)
         function computeEmployeeGrossWithTax(emp) {
@@ -781,17 +923,19 @@
             return Math.round(requested / 0.9);
         }
 
-        // 2. Tổng công = Phần nguyên của (Số tiền có thuế / Đơn giá/ca [250.000])
+        // 2. Tổng công = Phần nguyên của (Số tiền có thuế / Đơn giá/ca)
         function computeEmployeeTotalShifts(emp, rateOverride = null) {
-            const unitRate = (rateOverride && rateOverride > 0) ? rateOverride : (state.rate > 0 ? state.rate : 250000);
+            const defaultRate = getActiveVersionConfig().defaultRate;
+            const unitRate = (rateOverride && rateOverride > 0) ? rateOverride : (state.rate > 0 ? state.rate : defaultRate);
             const grossWithTax = computeEmployeeGrossWithTax(emp);
             return Math.floor(grossWithTax / unitRate);
         }
 
-        // 3. Thu nhập tính thuế = Tổng công * 250.000 (hoặc đơn giá/ca)
+        // 3. Thu nhập tính thuế = Tổng công * Đơn giá/ca
         function computeEmployeeTaxableIncome(emp, rateOverride = null) {
+            const defaultRate = getActiveVersionConfig().defaultRate;
             const shifts = computeEmployeeTotalShifts(emp, rateOverride);
-            const unitRate = (rateOverride && rateOverride > 0) ? rateOverride : (state.rate > 0 ? state.rate : 250000);
+            const unitRate = (rateOverride && rateOverride > 0) ? rateOverride : (state.rate > 0 ? state.rate : defaultRate);
             return shifts * unitRate;
         }
 
@@ -874,13 +1018,108 @@
         }
 
         function switchMainView(view) {
-            state.activeView = (view === 'payment' || view === 'bhxh') ? view : 'timesheet';
-            const isPayment = state.activeView === 'payment';
-            const isBhxh = state.activeView === 'bhxh';
+            const validViews = ['timesheet', 'payment', 'bhxh', 'timesheet_v2', 'payment_v2', 'bhxh_v2'];
+            const normalizedView = validViews.includes(view) ? view : 'timesheet';
+            const targetVersion = normalizedView.endsWith('_v2') ? 'v2' : 'v1';
+            const baseSubView = normalizedView.replace('_v2', ''); // 'timesheet' | 'payment' | 'bhxh'
 
-            const tabTimesheet = document.getElementById('tabViewTimesheet');
-            const tabPayment = document.getElementById('tabViewPayment');
-            const tabBhxh = document.getElementById('tabViewBhxh');
+            // Nếu chuyển đổi giữa cụm V1 (250.000đ) và V2 (450.000đ), lưu snapshot cụm cũ và nạp dữ liệu cụm mới
+            if (targetVersion !== state.activeVersion) {
+                const prevKey = getSheetKey();
+                const prevPayload = buildCurrentSheetPayload();
+                const prevSheetsMap = getActiveSavedSheetsMap();
+                prevSheetsMap[prevKey] = {
+                    ...prevPayload,
+                    employees: JSON.parse(prevPayload.employeesJson)
+                };
+
+                state.activeVersion = targetVersion;
+                const nextCfg = getActiveVersionConfig();
+                const nextSheetsMap = getActiveSavedSheetsMap();
+                const nextKeys = Object.keys(nextSheetsMap).sort((a, b) => b.localeCompare(a));
+
+                if (nextKeys.length > 0) {
+                    const preferredKey = nextSheetsMap[prevKey] ? prevKey : nextKeys[0];
+                    applySheetDataToState(nextSheetsMap[preferredKey]);
+                } else {
+                    state.rate = nextCfg.defaultRate;
+                    const rateInput = document.getElementById('ratePerShift');
+                    if (rateInput) rateInput.value = formatCurrency(state.rate);
+                    const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
+                    state.employees = nextCfg.defaultSampleEmployees.map(emp => ({
+                        ...emp,
+                        paymentPeriod: defaultPeriod,
+                        days: {}
+                    }));
+                    resetTableFilterState();
+                    state.employees.forEach(emp => generateRandomDaysForEmployee(emp));
+                    const initKey = getSheetKey();
+                    const initPayload = buildCurrentSheetPayload();
+                    nextSheetsMap[initKey] = {
+                        ...initPayload,
+                        employees: JSON.parse(initPayload.employeesJson)
+                    };
+                }
+                renderSavedSheetsBar();
+                scheduleAutoSave();
+            }
+
+            state.activeView = normalizedView;
+            const isV2 = targetVersion === 'v2';
+            const isPayment = baseSubView === 'payment';
+            const isBhxh = baseSubView === 'bhxh';
+
+            const tabMap = {
+                timesheet: document.getElementById('tabViewTimesheet'),
+                payment: document.getElementById('tabViewPayment'),
+                bhxh: document.getElementById('tabViewBhxh'),
+                timesheet_v2: document.getElementById('tabViewTimesheetV2'),
+                payment_v2: document.getElementById('tabViewPaymentV2'),
+                bhxh_v2: document.getElementById('tabViewBhxhV2')
+            };
+
+            const activeV1Class = 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-semibold shadow-2xs transition-all cursor-pointer';
+            const activeBhxhV1Class = 'w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-rose-50 text-rose-700 font-semibold shadow-2xs transition-all cursor-pointer';
+            const inactiveV1Class = 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium transition-all cursor-pointer';
+            const inactiveBhxhV1Class = 'w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium transition-all cursor-pointer';
+
+            const activeV2Class = 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-violet-600 text-white font-semibold shadow-xs transition-all cursor-pointer';
+            const activeBhxhV2Class = 'w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-rose-600 text-white font-semibold shadow-xs transition-all cursor-pointer';
+            const inactiveV2Class = 'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-violet-50/70 hover:text-violet-900 font-medium transition-all cursor-pointer';
+            const inactiveBhxhV2Class = 'w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-violet-50/70 hover:text-violet-900 font-medium transition-all cursor-pointer';
+
+            Object.keys(tabMap).forEach(k => {
+                const el = tabMap[k];
+                if (!el) return;
+                const kIsV2 = k.endsWith('_v2');
+                const kIsBhxh = k.startsWith('bhxh');
+                if (k === normalizedView) {
+                    if (kIsV2) {
+                        el.className = kIsBhxh ? activeBhxhV2Class : activeV2Class;
+                    } else {
+                        el.className = kIsBhxh ? activeBhxhV1Class : activeV1Class;
+                    }
+                } else {
+                    if (kIsV2) {
+                        el.className = kIsBhxh ? inactiveBhxhV2Class : inactiveV2Class;
+                    } else {
+                        el.className = kIsBhxh ? inactiveBhxhV1Class : inactiveV1Class;
+                    }
+                }
+            });
+
+            const versionPill = document.getElementById('activeVersionPill');
+            if (versionPill) {
+                const rateText = formatCurrency(state.rate);
+                if (isV2) {
+                    versionPill.textContent = `V2 • ${rateText}đ`;
+                    versionPill.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-violet-100 text-violet-800 border border-violet-200 shrink-0';
+                } else {
+                    versionPill.textContent = `V1 • ${rateText}đ`;
+                    versionPill.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0';
+                }
+            }
+
             const titleEl = document.getElementById('mainAppTitle');
             const subEl = document.getElementById('mainAppSubtitle');
             const btnRand = document.getElementById('btnRandomizeAll');
@@ -891,35 +1130,27 @@
             const tsWrapper = document.getElementById('timesheetTableWrapper');
             const payWrapper = document.getElementById('paymentTableWrapper');
             const bhxhWrapper = document.getElementById('bhxhTableWrapper');
-
-            const activeBtnClass = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-blue-700 shadow-2xs transition-all cursor-pointer';
-            const activeBhxhBtnClass = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-rose-700 shadow-2xs transition-all cursor-pointer';
-            const inactiveBtnClass = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
-
-            if (tabTimesheet && tabPayment && tabBhxh) {
-                tabTimesheet.className = (!isPayment && !isBhxh) ? activeBtnClass : inactiveBtnClass;
-                tabPayment.className = isPayment ? activeBtnClass : inactiveBtnClass;
-                tabBhxh.className = isBhxh ? activeBhxhBtnClass : inactiveBtnClass;
-            }
+            const v2Suffix = isV2 ? ' V2' : '';
 
             if (titleEl) {
-                if (isBhxh) titleEl.textContent = 'Danh Sách Rủi Ro BHXH (Dạy Thêm 1–3h/Ngày)';
-                else if (isPayment) titleEl.textContent = 'Yêu Cầu Thanh Toán Theo Tháng';
-                else titleEl.textContent = 'Chấm Công Tự Động Theo Tháng';
+                if (isBhxh) titleEl.textContent = `Danh Sách Rủi Ro BHXH${v2Suffix} (Dạy Thêm 1–3h/Ngày)`;
+                else if (isPayment) titleEl.textContent = `Yêu Cầu Thanh Toán${v2Suffix} Theo Tháng`;
+                else titleEl.textContent = `Chấm Công${v2Suffix} Tự Động Theo Tháng`;
             }
             if (subEl) {
-                if (isBhxh) subEl.textContent = 'Rà soát lao động không trọn thời gian có nguy cơ truy thu BHXH theo Luật BHXH 2024 & BLLĐ 2019';
-                else if (isPayment) subEl.textContent = 'Tính ngược thuế TNCN 10% • Số tiền có thuế = Số tiền yêu cầu ÷ 0,9';
-                else subEl.textContent = 'Phân bổ ca ngẫu nhiên tự động • Quản lý đa kỳ theo chi nhánh';
+                const rateText = formatCurrency(state.rate);
+                if (isBhxh) subEl.textContent = `Đơn giá ${rateText}đ/ca • Rà soát lao động không trọn thời gian theo Luật BHXH 2024 & BLLĐ 2019`;
+                else if (isPayment) subEl.textContent = `Đơn giá ${rateText}đ/ca • Tính ngược thuế TNCN 10% (Số tiền có thuế = Số tiền yêu cầu ÷ 0,9)`;
+                else subEl.textContent = `Đơn giá ${rateText}đ/ca • Phân bổ ca ngẫu nhiên tự động • Quản lý đa kỳ theo chi nhánh`;
             }
             if (btnRand) {
                 if (isPayment || isBhxh) btnRand.classList.add('hidden');
                 else btnRand.classList.remove('hidden');
             }
             if (btnExportLabel) {
-                if (isBhxh) btnExportLabel.textContent = 'Xuất DS Rủi Ro BHXH';
-                else if (isPayment) btnExportLabel.textContent = 'Xuất Phiếu Thanh Toán';
-                else btnExportLabel.textContent = 'Xuất Excel';
+                if (isBhxh) btnExportLabel.textContent = `Xuất DS Rủi Ro BHXH${v2Suffix}`;
+                else if (isPayment) btnExportLabel.textContent = `Xuất Phiếu Thanh Toán${v2Suffix}`;
+                else btnExportLabel.textContent = `Xuất Excel${v2Suffix}`;
             }
             if (randomPanel && taxPanel && bhxhPanel) {
                 randomPanel.classList.toggle('hidden', isPayment || isBhxh);
@@ -932,14 +1163,16 @@
                 bhxhWrapper.classList.toggle('hidden', !isBhxh);
             }
 
+            updatePaymentFormulaHint();
             renderTable();
             if (window.lucide) lucide.createIcons();
         }
 
         function exportActiveViewExcel() {
-            if (state.activeView === 'bhxh') {
+            const baseSubView = state.activeView.replace('_v2', '');
+            if (baseSubView === 'bhxh') {
                 exportBhxhRiskToExcel();
-            } else if (state.activeView === 'payment') {
+            } else if (baseSubView === 'payment') {
                 exportPaymentRequestToExcel();
             } else {
                 exportToExcel();
@@ -951,7 +1184,6 @@
         let auth = null;
         let currentUser = null;
         let saveTimeout = null;
-        let allSavedSheets = {};
 
         function getSheetKey(m = state.month, y = state.year) {
             return `${y}-${String(m).padStart(2, '0')}`;
@@ -973,7 +1205,8 @@
             const countEl = document.getElementById('savedSheetsCount');
             if (!listEl || !countEl) return;
 
-            const keys = Object.keys(allSavedSheets).sort((a, b) => b.localeCompare(a));
+            const activeSheetsMap = getActiveSavedSheetsMap();
+            const keys = Object.keys(activeSheetsMap).sort((a, b) => b.localeCompare(a));
             countEl.textContent = keys.length;
 
             if (keys.length === 0) {
@@ -983,7 +1216,7 @@
 
             const currentKey = getSheetKey();
             listEl.innerHTML = keys.map(key => {
-                const item = allSavedSheets[key];
+                const item = activeSheetsMap[key];
                 const isCurrent = key === currentKey;
                 const empCount = Array.isArray(item.employees) ? item.employees.length : 0;
                 const label = `Tháng ${String(item.month).padStart(2, '0')}/${item.year}`;
@@ -1042,9 +1275,10 @@
         }
 
         function applySheetDataToState(data) {
+            const defaultRate = getActiveVersionConfig().defaultRate;
             state.month = data.month || state.month;
             state.year = data.year || state.year;
-            state.rate = data.rate || 250000;
+            state.rate = data.rate || defaultRate;
 
             const selM = document.getElementById('selectMonth');
             const selY = document.getElementById('selectYear');
@@ -1104,35 +1338,39 @@
                     : [];
             }
 
+            updatePaymentFormulaHint();
             resetTableFilterState();
         }
 
         function scheduleAutoSave() {
             const currentKey = getSheetKey();
             const payload = buildCurrentSheetPayload();
-            allSavedSheets[currentKey] = {
+            const activeSheetsMap = getActiveSavedSheetsMap();
+            const verCfg = getActiveVersionConfig();
+
+            activeSheetsMap[currentKey] = {
                 ...payload,
                 employees: JSON.parse(payload.employeesJson)
             };
             renderSavedSheetsBar();
 
             if (!db || !currentUser) return;
-            updateSyncBadge('Đang lưu toàn bộ bảng...', false);
+            updateSyncBadge(`Đang lưu bảng (${verCfg.label})...`, false);
             if (saveTimeout) clearTimeout(saveTimeout);
             saveTimeout = setTimeout(async () => {
                 try {
                     if (!currentUser) return;
                     const userId = currentUser.uid;
-                    const sheetDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_sheets', currentKey);
+                    const sheetDocRef = doc(db, 'artifacts', appId, 'users', userId, verCfg.collectionName, currentKey);
                     await setDoc(sheetDocRef, payload);
 
-                    const metaDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', 'meta');
+                    const metaDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', verCfg.metaDocName);
                     await setDoc(metaDocRef, {
                         activeSheetKey: currentKey,
                         updatedAt: Date.now()
                     });
 
-                    updateSyncBadge(`Đã lưu ${Object.keys(allSavedSheets).length} bảng trên hệ thống`, true);
+                    updateSyncBadge(`Đã lưu ${Object.keys(activeSheetsMap).length} bảng (${verCfg.label})`, true);
                 } catch (err) {
                     console.error('Lỗi khi lưu dữ liệu:', err);
                     updateSyncBadge('Lỗi đồng bộ lưu trữ', false);
@@ -1141,36 +1379,39 @@
         }
 
         async function switchToSavedSheet(sheetKey) {
-            if (!allSavedSheets[sheetKey]) return;
+            const activeSheetsMap = getActiveSavedSheetsMap();
+            if (!activeSheetsMap[sheetKey]) return;
             const currentKey = getSheetKey();
             if (currentKey !== sheetKey) {
                 const currentPayload = buildCurrentSheetPayload();
-                allSavedSheets[currentKey] = {
+                activeSheetsMap[currentKey] = {
                     ...currentPayload,
                     employees: JSON.parse(currentPayload.employeesJson)
                 };
             }
-            applySheetDataToState(allSavedSheets[sheetKey]);
+            applySheetDataToState(activeSheetsMap[sheetKey]);
             renderTable();
             renderSavedSheetsBar();
             scheduleAutoSave();
-            showToast(`Đã mở bảng Tháng ${String(state.month).padStart(2, '0')}/${state.year}`, 'info');
+            showToast(`Đã mở bảng ${getActiveVersionConfig().label} Tháng ${String(state.month).padStart(2, '0')}/${state.year}`, 'info');
         }
 
         async function deleteSavedSheet(sheetKey, event) {
             if (event) event.stopPropagation();
-            const keys = Object.keys(allSavedSheets);
+            const activeSheetsMap = getActiveSavedSheetsMap();
+            const verCfg = getActiveVersionConfig();
+            const keys = Object.keys(activeSheetsMap);
             if (keys.length <= 1) {
                 showToast('Cần giữ lại ít nhất 1 bảng trong hệ thống.', 'warning');
                 return;
             }
 
-            const target = allSavedSheets[sheetKey];
-            delete allSavedSheets[sheetKey];
+            const target = activeSheetsMap[sheetKey];
+            delete activeSheetsMap[sheetKey];
 
             if (db && currentUser) {
                 try {
-                    const sheetDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timesheet_sheets', sheetKey);
+                    const sheetDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, verCfg.collectionName, sheetKey);
                     await deleteDoc(sheetDocRef);
                 } catch (err) {
                     console.error('Lỗi xóa bảng:', err);
@@ -1178,9 +1419,9 @@
             }
 
             if (getSheetKey() === sheetKey) {
-                const nextKey = Object.keys(allSavedSheets).sort((a, b) => b.localeCompare(a))[0];
+                const nextKey = Object.keys(activeSheetsMap).sort((a, b) => b.localeCompare(a))[0];
                 if (nextKey) {
-                    applySheetDataToState(allSavedSheets[nextKey]);
+                    applySheetDataToState(activeSheetsMap[nextKey]);
                     renderTable();
                 }
             }
@@ -1188,14 +1429,15 @@
             renderSavedSheetsBar();
             scheduleAutoSave();
             if (target) {
-                showToast(`Đã xóa bảng Tháng ${String(target.month).padStart(2, '0')}/${target.year}`, 'info');
+                showToast(`Đã xóa bảng ${verCfg.label} Tháng ${String(target.month).padStart(2, '0')}/${target.year}`, 'info');
             }
         }
 
         function copyFromPreviousSheet() {
+            const activeSheetsMap = getActiveSavedSheetsMap();
             const currentKey = getSheetKey();
-            const otherKeys = Object.keys(allSavedSheets)
-                .filter(k => k !== currentKey && Array.isArray(allSavedSheets[k].employees) && allSavedSheets[k].employees.length > 0)
+            const otherKeys = Object.keys(activeSheetsMap)
+                .filter(k => k !== currentKey && Array.isArray(activeSheetsMap[k].employees) && activeSheetsMap[k].employees.length > 0)
                 .sort((a, b) => b.localeCompare(a));
 
             if (otherKeys.length === 0) {
@@ -1203,7 +1445,7 @@
                 return;
             }
 
-            const sourceSheet = allSavedSheets[otherKeys[0]];
+            const sourceSheet = activeSheetsMap[otherKeys[0]];
             const defaultPeriod = getDefaultPaymentPeriod(state.month, state.year);
             state.employees = sourceSheet.employees.map((emp, idx) => ({
                 id: idx + 1,
@@ -1222,13 +1464,14 @@
         }
 
         function handleMonthOrYearChange(newMonth, newYear) {
+            const activeSheetsMap = getActiveSavedSheetsMap();
             const prevKey = getSheetKey(state.month, state.year);
             const targetKey = getSheetKey(newMonth, newYear);
             if (prevKey === targetKey) return;
 
             // 1. Lưu snapshot của tháng trước trước khi rời đi để tránh mất hoặc trộn dữ liệu
             const prevPayload = buildCurrentSheetPayload();
-            allSavedSheets[prevKey] = {
+            activeSheetsMap[prevKey] = {
                 ...prevPayload,
                 employees: JSON.parse(prevPayload.employeesJson)
             };
@@ -1237,9 +1480,9 @@
             state.year = newYear;
             resetTableFilterState();
 
-            if (allSavedSheets[targetKey]) {
+            if (activeSheetsMap[targetKey]) {
                 // 2. Nạp đúng dữ liệu đã lưu của tháng đích
-                applySheetDataToState(allSavedSheets[targetKey]);
+                applySheetDataToState(activeSheetsMap[targetKey]);
                 renderTable();
                 renderSavedSheetsBar();
                 scheduleAutoSave();
@@ -1259,7 +1502,7 @@
                 if (typeof __firebase_config === 'undefined') {
                     updateSyncBadge('Chế độ phiên hiện tại', true);
                     randomizeAll(false);
-                    allSavedSheets[getSheetKey()] = {
+                    versionStores.v1.allSavedSheets[getSheetKey()] = {
                         ...buildCurrentSheetPayload(),
                         employees: JSON.parse(JSON.stringify(state.employees))
                     };
@@ -1282,26 +1525,32 @@
                 if (!currentUser) return;
                 const userId = currentUser.uid;
 
-                const sheetsColRef = collection(db, 'artifacts', appId, 'users', userId, 'timesheet_sheets');
-                const sheetsSnap = await getDocs(sheetsColRef);
+                // Tải dữ liệu cho cả cụm V1 (250.000đ/ca) và V2 (450.000đ/ca)
+                for (const verKey of ['v1', 'v2']) {
+                    const cfg = VERSION_CONFIG[verKey];
+                    const storeMap = versionStores[verKey].allSavedSheets;
+                    const sheetsColRef = collection(db, 'artifacts', appId, 'users', userId, cfg.collectionName);
+                    const sheetsSnap = await getDocs(sheetsColRef);
 
-                sheetsSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const parsedEmps = data.employeesJson ? JSON.parse(data.employeesJson) : [];
-                    allSavedSheets[docSnap.id] = {
-                        ...data,
-                        employees: Array.isArray(parsedEmps) ? parsedEmps : []
-                    };
-                });
+                    sheetsSnap.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const parsedEmps = data.employeesJson ? JSON.parse(data.employeesJson) : [];
+                        storeMap[docSnap.id] = {
+                            ...data,
+                            employees: Array.isArray(parsedEmps) ? parsedEmps : []
+                        };
+                    });
+                }
 
-                if (Object.keys(allSavedSheets).length === 0) {
+                const v1SheetsMap = versionStores.v1.allSavedSheets;
+                if (Object.keys(v1SheetsMap).length === 0) {
                     const legacyDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', 'current_sheet');
                     const legacySnap = await getDoc(legacyDocRef);
                     if (legacySnap.exists()) {
                         const legacyData = legacySnap.data();
                         const k = getSheetKey(legacyData.month || 8, legacyData.year || 2026);
                         const parsedEmps = legacyData.employeesJson ? JSON.parse(legacyData.employeesJson) : [];
-                        allSavedSheets[k] = {
+                        v1SheetsMap[k] = {
                             ...legacyData,
                             sheetKey: k,
                             employees: Array.isArray(parsedEmps) ? parsedEmps : []
@@ -1315,14 +1564,14 @@
 
                 const metaDocRef = doc(db, 'artifacts', appId, 'users', userId, 'timesheet_data', 'meta');
                 const metaSnap = await getDoc(metaDocRef);
-                const savedKeys = Object.keys(allSavedSheets).sort((a, b) => b.localeCompare(a));
+                const savedKeys = Object.keys(v1SheetsMap).sort((a, b) => b.localeCompare(a));
 
                 if (savedKeys.length > 0) {
                     let activeKey = savedKeys[0];
-                    if (metaSnap.exists() && metaSnap.data().activeSheetKey && allSavedSheets[metaSnap.data().activeSheetKey]) {
+                    if (metaSnap.exists() && metaSnap.data().activeSheetKey && v1SheetsMap[metaSnap.data().activeSheetKey]) {
                         activeKey = metaSnap.data().activeSheetKey;
                     }
-                    applySheetDataToState(allSavedSheets[activeKey]);
+                    applySheetDataToState(v1SheetsMap[activeKey]);
                     renderTable();
                     renderSavedSheetsBar();
                     updateSyncBadge(`Đã tải ${savedKeys.length} bảng từ hệ thống`, true);
@@ -1330,7 +1579,7 @@
                     randomizeAll(false);
                     const initialKey = getSheetKey();
                     const payload = buildCurrentSheetPayload();
-                    allSavedSheets[initialKey] = {
+                    v1SheetsMap[initialKey] = {
                         ...payload,
                         employees: JSON.parse(payload.employeesJson)
                     };
@@ -1997,9 +2246,10 @@
             if (newPeriod !== 'ALL') {
                 const parsed = extractMonthYearFromPeriodText(newPeriod, state.year);
                 if (parsed && (parsed.month !== state.month || parsed.year !== state.year)) {
+                    const activeSheetsMap = getActiveSavedSheetsMap();
                     const targetKey = getSheetKey(parsed.month, parsed.year);
-                    if (allSavedSheets[targetKey]) {
-                        applySheetDataToState(allSavedSheets[targetKey]);
+                    if (activeSheetsMap[targetKey]) {
+                        applySheetDataToState(activeSheetsMap[targetKey]);
                         state.filters.paymentPeriod = newPeriod;
                         renderSavedSheetsBar();
                         renderTable();
@@ -2718,9 +2968,10 @@
         function countEmployeeAppearancesAcrossSavedSheets(empName) {
             const normName = String(empName || '').trim().toLowerCase();
             if (!normName) return 1;
+            const activeSheetsMap = getActiveSavedSheetsMap();
             let monthsAppeared = 0;
-            Object.keys(allSavedSheets).forEach(k => {
-                const sheet = allSavedSheets[k];
+            Object.keys(activeSheetsMap).forEach(k => {
+                const sheet = activeSheetsMap[k];
                 const list = Array.isArray(sheet.employees) ? sheet.employees : [];
                 if (list.some(item => String(item.name || '').trim().toLowerCase() === normName)) {
                     monthsAppeared++;
@@ -2810,15 +3061,9 @@
             const thead = document.getElementById('bhxhTableHeader');
             const tbody = document.getElementById('bhxhTableBody');
             const tfoot = document.getElementById('bhxhTableFooter');
-            const badgeEl = document.getElementById('bhxhTabCountBadge');
             const levelFilterEl = document.getElementById('bhxhRiskLevelFilter');
 
-            const allEvaluated = state.employees.map(evaluateEmployeeBhxhRisk);
-            const totalAtRiskCount = allEvaluated.filter(r => r.riskLevel === 'HIGH' || r.riskLevel === 'MEDIUM').length;
-            if (badgeEl) {
-                badgeEl.textContent = String(totalAtRiskCount);
-                badgeEl.classList.toggle('hidden', totalAtRiskCount === 0);
-            }
+            updateBhxhTabBadges();
 
             if (!thead || !tbody || !tfoot) return;
 
@@ -2975,9 +3220,9 @@
                 showToast('Không có dữ liệu rủi ro BHXH để xuất Excel.', 'warning');
                 return;
             }
-
+            const v2Suffix = getActiveVersionConfig().filePrefix;
             const workbook = new ExcelJS.Workbook();
-            const ws = workbook.addWorksheet(`RuiRo_BHXH_T${state.month}_${state.year}`, {
+            const ws = workbook.addWorksheet(`RuiRo_BHXH${v2Suffix}_T${state.month}_${state.year}`, {
                 pageSetup: {
                     paperSize: 9,
                     orientation: 'landscape',
@@ -2999,14 +3244,14 @@
 
             ws.mergeCells('A1:K1');
             const titleCell = ws.getCell('A1');
-            titleCell.value = `DANH SÁCH RỦI RO BHXH (GIÁO VIÊN DẠY THÊM 1–3 TIẾNG/NGÀY) - THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
+            titleCell.value = `DANH SÁCH RỦI RO BHXH${state.activeVersion === 'v2' ? ' V2' : ''} (GIÁO VIÊN DẠY THÊM 1–3 TIẾNG/NGÀY) - THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
             titleCell.font = { name: 'Times New Roman', size: 13, bold: true, color: { argb: 'FF881337' } };
             titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
             ws.getRow(1).height = 26;
 
             ws.mergeCells('A2:K2');
             const subCell = ws.getCell('A2');
-            subCell.value = `Căn cứ Luật BHXH 2024 & BLLĐ 2019 • Ngưỡng lương tham chiếu: ${formatCurrency(state.bhxhRules.salaryThreshold)} đ/tháng • Tần suất: >= ${state.bhxhRules.minWorkingDays} ngày/tháng`;
+            subCell.value = `Đơn giá: ${formatCurrency(state.rate)} đ/ca • Căn cứ Luật BHXH 2024 & BLLĐ 2019 • Ngưỡng lương tham chiếu: ${formatCurrency(state.bhxhRules.salaryThreshold)} đ/tháng`;
             subCell.font = { name: 'Times New Roman', size: 10, italic: true, color: { argb: 'FF334155' } };
             subCell.alignment = { horizontal: 'center', vertical: 'middle' };
             ws.getRow(2).height = 18;
@@ -3105,32 +3350,51 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Danh_Sach_Rui_Ro_BHXH_Thang_${String(state.month).padStart(2, '0')}_${state.year}.xlsx`;
+            a.download = `Danh_Sach_Rui_Ro_BHXH${v2Suffix}_Thang_${String(state.month).padStart(2, '0')}_${state.year}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showToast('Đã xuất file Excel Danh sách rủi ro BHXH!', 'success');
+            showToast(`Đã xuất file Excel Danh sách rủi ro BHXH${state.activeVersion === 'v2' ? ' V2' : ''}!`, 'success');
         }
 
-        function toggleSystemMenu(event) {
-            if (event) event.stopPropagation();
-            const menu = document.getElementById('systemMenuDropdown');
-            if (menu) menu.classList.toggle('hidden');
+        // Điều khiển Sidebar (Mobile Drawer & Desktop Collapse)
+        let isDesktopSidebarCollapsed = false;
+
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('appSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('-translate-x-full');
+            if (backdrop) backdrop.classList.remove('hidden');
         }
 
-        function closeSystemMenu() {
-            const menu = document.getElementById('systemMenuDropdown');
-            if (menu) menu.classList.add('hidden');
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('appSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (backdrop) backdrop.classList.add('hidden');
         }
 
-        document.addEventListener('click', (e) => {
-            const wrapper = document.getElementById('systemMenuWrapper');
-            if (wrapper && !wrapper.contains(e.target)) {
-                closeSystemMenu();
+        function toggleDesktopSidebar() {
+            isDesktopSidebarCollapsed = !isDesktopSidebarCollapsed;
+            const sidebar = document.getElementById('appSidebar');
+            const collapseIcon = document.getElementById('sidebarCollapseIcon');
+            if (!sidebar) return;
+
+            if (isDesktopSidebarCollapsed) {
+                sidebar.classList.remove('w-68');
+                sidebar.classList.add('w-[74px]');
+                sidebar.querySelectorAll('.sidebar-label, .sidebar-group-title').forEach(el => el.classList.add('hidden'));
+                if (collapseIcon) collapseIcon.setAttribute('data-lucide', 'panel-left-open');
+            } else {
+                sidebar.classList.remove('w-[74px]');
+                sidebar.classList.add('w-68');
+                sidebar.querySelectorAll('.sidebar-label, .sidebar-group-title').forEach(el => el.classList.remove('hidden'));
+                if (collapseIcon) collapseIcon.setAttribute('data-lucide', 'panel-left-close');
             }
-        });
+            if (window.lucide) lucide.createIcons();
+        }
 
         // --- CÁC HÀM THAO TÁC DỮ LIỆU ---
         function randomizeAll(shouldSave = true) {
@@ -3201,10 +3465,11 @@
             const changed = (m !== state.month) || (y !== state.year);
             if (!changed) return false;
 
+            const activeSheetsMap = getActiveSavedSheetsMap();
             const prevKey = getSheetKey(state.month, state.year);
             if (state.employees.length > 0) {
                 const prevPayload = buildCurrentSheetPayload();
-                allSavedSheets[prevKey] = {
+                activeSheetsMap[prevKey] = {
                     ...prevPayload,
                     employees: JSON.parse(prevPayload.employeesJson)
                 };
@@ -3601,10 +3866,11 @@
             const isSwitchingToAnotherMonth = detectedCal && (detectedCal.month !== state.month || detectedCal.year !== state.year);
             if (isSwitchingToAnotherMonth) {
                 // Lưu lại dữ liệu tháng cũ trước khi chuyển sang tháng mới của file import
+                const activeSheetsMap = getActiveSavedSheetsMap();
                 const oldKey = getSheetKey(state.month, state.year);
                 if (state.employees.length > 0) {
                     const oldPayload = buildCurrentSheetPayload();
-                    allSavedSheets[oldKey] = {
+                    activeSheetsMap[oldKey] = {
                         ...oldPayload,
                         employees: JSON.parse(oldPayload.employeesJson)
                     };
@@ -3947,8 +4213,9 @@
             const totalCols = state.columnOrder.length + totalDays;
             const nameColPosition = state.columnOrder.indexOf('name');
             const frozenColCount = nameColPosition !== -1 ? nameColPosition + 1 : state.columnOrder.length;
+            const v2Suffix = getActiveVersionConfig().filePrefix;
             const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet(`ChamCong_T${state.month}_${state.year}`, {
+            const worksheet = workbook.addWorksheet(`ChamCong${v2Suffix}_T${state.month}_${state.year}`, {
                 pageSetup: {
                     paperSize: 9,
                     orientation: 'landscape',
@@ -3978,7 +4245,7 @@
 
             worksheet.mergeCells(1, 1, 1, totalCols);
             const titleCell = worksheet.getCell(1, 1);
-            titleCell.value = `BẢNG CHẤM CÔNG THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
+            titleCell.value = `BẢNG CHẤM CÔNG${state.activeVersion === 'v2' ? ' V2' : ''} THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
             titleCell.font = { name: 'Times New Roman', size: 14, bold: true, color: { argb: 'FF0F172A' } };
             titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
             worksheet.getRow(1).height = 26;
@@ -4347,13 +4614,13 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Bang_Cham_Cong_Thang_${String(state.month).padStart(2, '0')}_${state.year}.xlsx`;
+            a.download = `Bang_Cham_Cong${v2Suffix}_Thang_${String(state.month).padStart(2, '0')}_${state.year}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showToast('Đã xuất file Excel chuẩn khổ in A4 ngang!', 'success');
+            showToast(`Đã xuất file Excel Bảng Chấm Công${state.activeVersion === 'v2' ? ' V2' : ''} chuẩn khổ in A4 ngang!`, 'success');
         }
 
         // --- XUẤT FILE EXCEL PHIẾU YÊU CẦU THANH TOÁN ---
@@ -4369,8 +4636,9 @@
                 return;
             }
 
+            const v2Suffix = getActiveVersionConfig().filePrefix;
             const workbook = new ExcelJS.Workbook();
-            const ws = workbook.addWorksheet(`YeuCauThanhToan_T${state.month}_${state.year}`, {
+            const ws = workbook.addWorksheet(`YeuCauThanhToan${v2Suffix}_T${state.month}_${state.year}`, {
                 pageSetup: {
                     paperSize: 9,
                     orientation: 'landscape',
@@ -4393,7 +4661,7 @@
 
             ws.mergeCells('A1:K1');
             const titleCell = ws.getCell('A1');
-            titleCell.value = `BẢNG YÊU CẦU THANH TOÁN THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
+            titleCell.value = `BẢNG YÊU CẦU THANH TOÁN${state.activeVersion === 'v2' ? ' V2' : ''} THÁNG ${String(state.month).padStart(2, '0')}/${state.year}`;
             titleCell.font = { name: 'Times New Roman', size: 14, bold: true, color: { argb: 'FF0F172A' } };
             titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
             ws.getRow(1).height = 26;
@@ -4555,29 +4823,30 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Bang_Yeu_Cau_Thanh_Toan_Thang_${String(state.month).padStart(2, '0')}_${state.year}.xlsx`;
+            a.download = `Bang_Yeu_Cau_Thanh_Toan${v2Suffix}_Thang_${String(state.month).padStart(2, '0')}_${state.year}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showToast('Đã xuất file Excel Bảng Yêu Cầu Thanh Toán!', 'success');
+            showToast(`Đã xuất file Excel Bảng Yêu Cầu Thanh Toán${state.activeVersion === 'v2' ? ' V2' : ''}!`, 'success');
         }
 
         // --- BACKUP & KHÔI PHỤC TOÀN BỘ DATABASE (.JSON) ---
         function openBackupModal() {
+            const activeSheetsMap = getActiveSavedSheetsMap();
             const currentKey = getSheetKey();
             const currentPayload = buildCurrentSheetPayload();
-            allSavedSheets[currentKey] = {
+            activeSheetsMap[currentKey] = {
                 ...currentPayload,
                 employees: JSON.parse(currentPayload.employeesJson)
             };
 
-            const keys = Object.keys(allSavedSheets);
-            const totalEmp = keys.reduce((sum, k) => sum + (Array.isArray(allSavedSheets[k].employees) ? allSavedSheets[k].employees.length : 0), 0);
+            const keys = Object.keys(activeSheetsMap);
+            const totalEmp = keys.reduce((sum, k) => sum + (Array.isArray(activeSheetsMap[k].employees) ? activeSheetsMap[k].employees.length : 0), 0);
             const summaryEl = document.getElementById('backupSummaryText');
             if (summaryEl) {
-                summaryEl.textContent = `${keys.length} bảng chấm công (${totalEmp} lượt nhân sự)`;
+                summaryEl.textContent = `${keys.length} bảng chấm công ${getActiveVersionConfig().label} (${totalEmp} lượt nhân sự)`;
             }
 
             const modal = document.getElementById('backupModal');
@@ -4597,16 +4866,18 @@
         }
 
         function exportDatabaseBackup() {
+            const activeSheetsMap = getActiveSavedSheetsMap();
+            const verCfg = getActiveVersionConfig();
             const currentKey = getSheetKey();
             const currentPayload = buildCurrentSheetPayload();
-            allSavedSheets[currentKey] = {
+            activeSheetsMap[currentKey] = {
                 ...currentPayload,
                 employees: JSON.parse(currentPayload.employeesJson)
             };
 
             const sheetsToExport = {};
-            Object.keys(allSavedSheets).forEach(k => {
-                const item = allSavedSheets[k];
+            Object.keys(activeSheetsMap).forEach(k => {
+                const item = activeSheetsMap[k];
                 const emps = Array.isArray(item.employees)
                     ? item.employees
                     : (item.employeesJson ? JSON.parse(item.employeesJson) : []);
@@ -4614,7 +4885,7 @@
                     sheetKey: k,
                     month: item.month,
                     year: item.year,
-                    rate: item.rate || 250000,
+                    rate: item.rate || verCfg.defaultRate,
                     excludeSunday: typeof item.excludeSunday === 'boolean' ? item.excludeSunday : true,
                     excludeSaturday: typeof item.excludeSaturday === 'boolean' ? item.excludeSaturday : false,
                     naturalSpread: typeof item.naturalSpread === 'boolean' ? item.naturalSpread : true,
@@ -4628,7 +4899,7 @@
 
             const backupData = {
                 app: 'BangChamCongTuDong',
-                version: '1.0',
+                version: state.activeVersion,
                 exportedAt: new Date().toISOString(),
                 activeSheetKey: currentKey,
                 totalSheets: Object.keys(sheetsToExport).length,
@@ -4642,13 +4913,13 @@
             const now = new Date();
             const dateStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
             a.href = url;
-            a.download = `Backup_ChamCong_${dateStamp}.json`;
+            a.download = `Backup_ChamCong${verCfg.filePrefix}_${dateStamp}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showToast(`Đã tải file Backup gồm ${backupData.totalSheets} bảng chấm công!`, 'success');
+            showToast(`Đã tải file Backup ${verCfg.label} gồm ${backupData.totalSheets} bảng chấm công!`, 'success');
         }
 
         function triggerBackupFileInput() {
@@ -4686,17 +4957,19 @@
 
                     const modeRadio = document.querySelector('input[name="restoreMode"]:checked');
                     const mode = modeRadio ? modeRadio.value : 'merge';
+                    const activeSheetsMap = getActiveSavedSheetsMap();
+                    const verCfg = getActiveVersionConfig();
 
                     if (mode === 'replace') {
                         if (db && currentUser) {
-                            const oldKeys = Object.keys(allSavedSheets);
+                            const oldKeys = Object.keys(activeSheetsMap);
                             for (const oldK of oldKeys) {
                                 try {
-                                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timesheet_sheets', oldK));
+                                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, verCfg.collectionName, oldK));
                                 } catch (_) {}
                             }
                         }
-                        allSavedSheets = {};
+                        Object.keys(activeSheetsMap).forEach(k => delete activeSheetsMap[k]);
                     }
 
                     const incomingKeys = Object.keys(parsed.sheets);
@@ -4712,7 +4985,7 @@
                             sheetKey: cleanKey,
                             month: Number(s.month),
                             year: Number(s.year),
-                            rate: Number(s.rate) || 250000,
+                            rate: Number(s.rate) || verCfg.defaultRate,
                             excludeSunday: typeof s.excludeSunday === 'boolean' ? s.excludeSunday : true,
                             excludeSaturday: typeof s.excludeSaturday === 'boolean' ? s.excludeSaturday : false,
                             naturalSpread: typeof s.naturalSpread === 'boolean' ? s.naturalSpread : true,
@@ -4723,30 +4996,30 @@
                             updatedAt: Date.now()
                         };
 
-                        allSavedSheets[cleanKey] = {
+                        activeSheetsMap[cleanKey] = {
                             ...sheetRecord,
                             employees: emps
                         };
                         restoredCount++;
 
                         if (db && currentUser) {
-                            await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'timesheet_sheets', cleanKey), sheetRecord);
+                            await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, verCfg.collectionName, cleanKey), sheetRecord);
                         }
                     }
 
-                    const targetKey = (parsed.activeSheetKey && allSavedSheets[parsed.activeSheetKey])
+                    const targetKey = (parsed.activeSheetKey && activeSheetsMap[parsed.activeSheetKey])
                         ? parsed.activeSheetKey
-                        : Object.keys(allSavedSheets).sort((a, b) => b.localeCompare(a))[0];
+                        : Object.keys(activeSheetsMap).sort((a, b) => b.localeCompare(a))[0];
 
-                    if (targetKey && allSavedSheets[targetKey]) {
-                        applySheetDataToState(allSavedSheets[targetKey]);
+                    if (targetKey && activeSheetsMap[targetKey]) {
+                        applySheetDataToState(activeSheetsMap[targetKey]);
                         renderTable();
                     }
 
                     renderSavedSheetsBar();
                     scheduleAutoSave();
                     closeBackupModal();
-                    showToast(`Đã khôi phục thành công ${restoredCount} bảng chấm công từ file Backup!`, 'success');
+                    showToast(`Đã khôi phục thành công ${restoredCount} bảng chấm công ${verCfg.label} từ file Backup!`, 'success');
                 } catch (err) {
                     console.error('Lỗi đọc file backup:', err);
                     showToast('Lỗi đọc file Backup (.json). Vui lòng kiểm tra lại file!', 'warning');
@@ -4797,8 +5070,9 @@
         window.triggerBackupFileInput = triggerBackupFileInput;
         window.handleBackupFileSelect = handleBackupFileSelect;
         window.handleBackupFileDrop = handleBackupFileDrop;
-        window.toggleSystemMenu = toggleSystemMenu;
-        window.closeSystemMenu = closeSystemMenu;
+        window.openMobileSidebar = openMobileSidebar;
+        window.closeMobileSidebar = closeMobileSidebar;
+        window.toggleDesktopSidebar = toggleDesktopSidebar;
         window.switchMainView = switchMainView;
         window.exportActiveViewExcel = exportActiveViewExcel;
         window.exportPaymentRequestToExcel = exportPaymentRequestToExcel;
@@ -4814,10 +5088,12 @@
 
         function getReportRecords() {
             const records = [];
+            const activeSheetsMap = getActiveSavedSheetsMap();
+            const defaultRate = getActiveVersionConfig().defaultRate;
             const currentKey = getSheetKey();
             const currentPayload = buildCurrentSheetPayload();
             const mergedSheets = {
-                ...allSavedSheets,
+                ...activeSheetsMap,
                 [currentKey]: {
                     ...currentPayload,
                     employees: JSON.parse(currentPayload.employeesJson)
@@ -4831,7 +5107,7 @@
             keysToUse.forEach(k => {
                 const sheet = mergedSheets[k];
                 if (!sheet || !Array.isArray(sheet.employees)) return;
-                const sheetRate = Number(sheet.rate) || 250000;
+                const sheetRate = Number(sheet.rate) || defaultRate;
                 const monthLabel = `Tháng ${String(sheet.month).padStart(2, '0')}/${sheet.year}`;
 
                 sheet.employees.forEach(emp => {
@@ -4946,9 +5222,11 @@
                 : periodScopedRecords.filter(r => r.branch === reportState.selectedBranch);
 
             if (subtitle) {
+                const activeSheetsMap = getActiveSavedSheetsMap();
+                const verLabel = getActiveVersionConfig().label;
                 const scopeText = reportState.scope === 'current'
-                    ? `Kỳ dữ liệu Tháng ${String(state.month).padStart(2, '0')}/${state.year}`
-                    : `Tổng hợp ${Object.keys(allSavedSheets).length} tháng đã lưu trên hệ thống`;
+                    ? `Bảng ${verLabel} • Kỳ dữ liệu Tháng ${String(state.month).padStart(2, '0')}/${state.year}`
+                    : `Bảng ${verLabel} • Tổng hợp ${Object.keys(activeSheetsMap).length} tháng đã lưu`;
                 subtitle.textContent = `${scopeText} • ${filteredRecords.length} lượt chấm công`;
             }
 
@@ -5470,8 +5748,10 @@
 
         document.getElementById('ratePerShift').addEventListener('change', (e) => {
             const val = parseCurrency(e.target.value);
-            state.rate = val > 0 ? val : 250000;
+            const defaultRate = getActiveVersionConfig().defaultRate;
+            state.rate = val > 0 ? val : defaultRate;
             e.target.value = formatCurrency(state.rate);
+            updatePaymentFormulaHint();
             randomizeAll(true);
         });
 
